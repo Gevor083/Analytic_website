@@ -1,5 +1,7 @@
 {% extends 'analytics_app/base.html' %}
 
+{% load dict_extras %}
+
 {% block title %}Result{% endblock %}
 
 {% block content %}
@@ -9,7 +11,7 @@
 
     <div class="row">
         {% for item in data %}
-            {% with analysis=analysis_data[item.column_name] %}
+            {% with analysis=analysis_data|get_item:item.column_name %}
             <div class="col-md-6 mb-4">
                 <div class="card shadow-sm">
                     <div class="card-body">
@@ -48,9 +50,8 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const analysisData = {{ analysis_data|safe }};
+            const analysisData = JSON.parse('{{ analysis_data|escapejs }}');
             Object.keys(analysisData).forEach(function(col) {
-                // Line chart
                 const lineCtx = document.getElementById('line-' + col);
                 if (lineCtx) {
                     new Chart(lineCtx, {

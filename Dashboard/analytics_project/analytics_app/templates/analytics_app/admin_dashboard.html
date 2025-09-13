@@ -1,0 +1,43 @@
+{% extends 'analytics_app/base.html' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Admin Dashboard</h2>
+    <div class="mb-3">
+        <strong>Total Users:</strong> {{ total_users }}<br>
+        <strong>Total Uploads:</strong> {{ total_uploads }}
+    </div>
+    <h3>Users and Their Uploads</h3>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Email</th>
+                <th>Uploads</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>
+                    {% if uploads_by_user[user] %}
+                        <ul>
+                        {% for upload in uploads_by_user[user] %}
+                            <li>{{ upload.file.name|slice:'8:' }} ({{ upload.uploaded_at|date:'Y-m-d H:i' }}, {{ upload.file_type }})</li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <em>No uploads</em>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+

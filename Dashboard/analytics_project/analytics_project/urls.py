@@ -29,4 +29,9 @@ urlpatterns = [
     path('result/<int:file_id>/', views.result_view, name='result'),
     path('files/', views.files_view, name='files'),
     path('delete/<int:file_id>/', views.delete_file_view, name='delete_file'),
+    path('my_uploads/', views.my_uploads_view, name='my_uploads'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+    path('register/', views.register_view, name='register'),
+    path('admin_dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
 ]

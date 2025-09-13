@@ -11,9 +11,9 @@
     <form method="post" enctype="multipart/form-data" class="p-4 border rounded bg-light shadow-sm">
         {% csrf_token %}
         <div class="mb-3">
-            <label for="file" class="form-label">Choose a file (CSV, Excel, JSON, SQL)</label>
-            <input type="file" name="file" id="file" class="form-control" accept=".csv,.xlsx,.xls,.json,.sql">
-            <small class="form-text text-muted">Supported formats: .csv, .xlsx, .xls, .json, .sql</small>
+            <label for="file" class="form-label">Choose a file (CSV, JSON, SQL)</label>
+            <input type="file" name="file" id="file" class="form-control" accept=".csv,.json,.sql">
+            <small class="form-text text-muted">Supported formats: .csv, .json, .sql</small>
         </div>
         <button type="submit" class="btn btn-primary">Upload</button>
     </form>
