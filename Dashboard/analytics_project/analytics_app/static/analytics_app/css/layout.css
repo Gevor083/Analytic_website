@@ -1,0 +1,43 @@
+/* Layout */
+header {
+    background-color: #1a1a1a;
+    color: #fff;
+    padding: 20px 0;
+}
+
+header nav ul.main-nav {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+}
+
+header nav ul.main-nav li a {
+    color: #fff;
+    font-weight: bold;
+    padding: 5px 10px;
+    transition: background 0.3s, color 0.3s;
+}
+
+header nav ul.main-nav li a:hover {
+    background-color: #0077ff;
+    color: #fff;
+    border-radius: 5px;
+}
+
+main {
+    padding: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+footer {
+    background-color: #1a1a1a;
+    color: #fff;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Sections spacing */
+section {
+    margin-bottom: 50px;
+}

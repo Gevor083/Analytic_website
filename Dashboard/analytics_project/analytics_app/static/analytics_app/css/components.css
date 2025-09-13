@@ -1,0 +1,87 @@
+/* Buttons */
+.btn-primary {
+    display: inline-block;
+    padding: 12px 25px;
+    background-color: #0077ff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background 0.3s;
+    text-align: center;
+}
+
+.btn-primary:hover {
+    background-color: #005fcc;
+}
+
+/* Hero section */
+.hero {
+    text-align: center;
+    padding: 60px 20px;
+    background-color: #e6f0ff;
+    border-radius: 10px;
+    margin-bottom: 40px;
+}
+
+.hero h1 {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+}
+
+.hero p {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+}
+
+/* Feature cards */
+.feature-card {
+    background-color: #fff;
+    padding: 20px;
+    margin: 10px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    display: inline-block;
+    width: 45%;
+    vertical-align: top;
+    text-align: center;
+}
+
+.feature-card h3 {
+    margin-bottom: 10px;
+}
+
+/* Upload section */
+.upload-section form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.upload-section input[type="file"] {
+    padding: 10px;
+}
+
+/* Result section */
+.result-cards {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.result-card {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    width: 300px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.result-card h3 {
+    margin-bottom: 10px;
+}

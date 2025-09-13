@@ -3,6 +3,20 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<h1>Welcome to Home Page</h1>
-<p>Intro text or main content here.</p>
+<section class="hero">
+    <h1>Welcome to Analytics Website</h1>
+    <p>Get professional insights and data analytics at your fingertips.</p>
+    <a href="{% url 'upload' %}" class="btn-primary">Upload Data</a>
+</section>
+
+<section class="features">
+    <div class="feature-card">
+        <h3>Feature 1</h3>
+        <p>Description of feature 1</p>
+    </div>
+    <div class="feature-card">
+        <h3>Feature 2</h3>
+        <p>Description of feature 2</p>
+    </div>
+</section>
 {% endblock %}

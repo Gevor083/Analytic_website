@@ -3,6 +3,12 @@
 {% block title %}Upload{% endblock %}
 
 {% block content %}
-<h1>Upload Page</h1>
-<p>Upload your files or data here.</p>
+<section class="upload-section">
+    <h1>Upload Your Files</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="file">
+        <button type="submit" class="btn-primary">Upload</button>
+    </form>
+</section>
 {% endblock %}

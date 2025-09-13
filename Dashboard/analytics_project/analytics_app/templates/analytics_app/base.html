@@ -4,15 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Analytics Website{% endblock %}</title>
+
+    <!-- CSS ֆայլեր -->
     <link rel="stylesheet" href="{% static 'analytics_app/css/base.css' %}">
     <link rel="stylesheet" href="{% static 'analytics_app/css/layout.css' %}">
     <link rel="stylesheet" href="{% static 'analytics_app/css/components.css' %}">
+
+    <!-- JS ֆայլ -->
     <script src="{% static 'analytics_app/js/scripts.js' %}" defer></script>
 </head>
 <body>
     <header>
         <nav>
-            <ul>
+            <ul class="main-nav">
                 <li><a href="{% url 'home' %}">Home</a></li>
                 <li><a href="{% url 'upload' %}">Upload</a></li>
                 <li><a href="{% url 'result' %}">Result</a></li>
