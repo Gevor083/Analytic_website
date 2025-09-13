@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'analytics_app',
 ]
 
 MIDDLEWARE = [
@@ -77,7 +78,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'analytics_db',
         'USER': 'postgres',
-        'PASSWORD': 'your_password',
+        'PASSWORD': 'Gevor1121*',
         'HOST': 'localhost',
         'PORT': '5432',
     }

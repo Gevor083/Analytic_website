@@ -17,6 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from django.contrib import admin
+from django.urls import path
+from analytics_app import views
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', views.home, name='home'),
+    path('upload/', views.upload_csv, name='upload_csv'),
+    path('results/<int:file_id>/', views.results, name='results'),
 ]

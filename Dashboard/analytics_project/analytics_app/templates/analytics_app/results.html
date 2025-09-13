@@ -1,0 +1,44 @@
+<h1>Results for {{ file.file.name }}</h1>
+
+<table border="1">
+    <tr>
+        <th>Column</th>
+        <th>Sum</th>
+    </tr>
+    {% for item in data %}
+    <tr>
+        <td>{{ item.column_name }}</td>
+        <td>{{ item.value }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h2>Charts</h2>
+<canvas id="chartCanvas"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('chartCanvas').getContext('2d');
+    const chartData = {{ chart_data|safe }};
+    const datasets = Object.keys(chartData).map((col, idx) => ({
+        label: col,
+        data: chartData[col],
+        borderColor: `hsl(${idx * 60}, 70%, 50%)`,
+        fill: false
+    }));
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: Array.from({length: chartData[Object.keys(chartData)[0]]?.length || 0}, (_, i) => i + 1),
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'top' },
+                title: { display: true, text: 'CSV Data Visualization' }
+            }
+        }
+    });
+</script>
