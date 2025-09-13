@@ -3,19 +3,104 @@
 {% block title %}Result{% endblock %}
 
 {% block content %}
-<section class="result-section">
-    <h1>Results</h1>
+<section class="result-section container">
+    <h1 class="mb-4">Results</h1>
     <p>Here you can see the results of your uploaded data.</p>
 
-    <div class="result-cards">
-        <div class="result-card">
-            <h3>Result 1</h3>
-            <p>Details of result 1</p>
-        </div>
-        <div class="result-card">
-            <h3>Result 2</h3>
-            <p>Details of result 2</p>
-        </div>
+    <div class="row">
+        {% for item in data %}
+            {% with analysis=analysis_data[item.column_name] %}
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ item.column_name }}</h5>
+                        <p class="card-text">Ընդամենը: <strong>{{ item.value }}</strong></p>
+                        <ul class="list-group mb-2">
+                            <li class="list-group-item">Mean: {{ analysis.stats.mean }}</li>
+                            <li class="list-group-item">Median: {{ analysis.stats.median }}</li>
+                            <li class="list-group-item">Min: {{ analysis.stats.min }}</li>
+                            <li class="list-group-item">Max: {{ analysis.stats.max }}</li>
+                            <li class="list-group-item">Std: {{ analysis.stats.std }}</li>
+                            <li class="list-group-item">Missing: {{ analysis.stats.missing }}</li>
+                            <li class="list-group-item">Outliers: {{ analysis.stats.outlier_count }}</li>
+                        </ul>
+                        {% if analysis.urgent %}
+                        <div class="alert alert-warning">
+                            <ul class="mb-0">
+                                {% for msg in analysis.urgent %}
+                                <li>{{ msg }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                        <canvas id="line-{{ item.column_name }}" height="150"></canvas>
+                        <canvas id="hist-{{ item.column_name }}" height="150" class="mt-3"></canvas>
+                    </div>
+                </div>
+            </div>
+            {% endwith %}
+        {% empty %}
+            <div class="col-12">
+                <p>No results found for this file.</p>
+            </div>
+        {% endfor %}
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const analysisData = {{ analysis_data|safe }};
+            Object.keys(analysisData).forEach(function(col) {
+                // Line chart
+                const lineCtx = document.getElementById('line-' + col);
+                if (lineCtx) {
+                    new Chart(lineCtx, {
+                        type: 'line',
+                        data: {
+                            labels: analysisData[col].line.map((_, i) => i + 1),
+                            datasets: [{
+                                label: col,
+                                data: analysisData[col].line,
+                                borderColor: 'rgba(13, 110, 253, 0.7)',
+                                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                                fill: true,
+                                tension: 0.3
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { display: false },
+                                title: { display: false }
+                            }
+                        }
+                    });
+                }
+                // Histogram chart
+                const histCtx = document.getElementById('hist-' + col);
+                if (histCtx) {
+                    new Chart(histCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: analysisData[col].histogram.bins.map(b => b.toFixed(2)),
+                            datasets: [{
+                                label: col + ' Histogram',
+                                data: analysisData[col].histogram.counts,
+                                backgroundColor: 'rgba(253, 193, 7, 0.5)',
+                                borderColor: 'rgba(253, 193, 7, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { display: false },
+                                title: { display: false }
+                            }
+                        }
+                    });
+                }
+            });
+        });
+    </script>
 </section>
 {% endblock %}

@@ -3,12 +3,19 @@
 {% block title %}Upload{% endblock %}
 
 {% block content %}
-<section class="upload-section">
-    <h1>Upload Your Files</h1>
-    <form method="post" enctype="multipart/form-data">
+<section class="upload-section container mt-5">
+    <h1 class="mb-4">Upload Your Files</h1>
+    {% if error %}
+        <div class="alert alert-danger" role="alert">{{ error }}</div>
+    {% endif %}
+    <form method="post" enctype="multipart/form-data" class="p-4 border rounded bg-light shadow-sm">
         {% csrf_token %}
-        <input type="file" name="file">
-        <button type="submit" class="btn-primary">Upload</button>
+        <div class="mb-3">
+            <label for="file" class="form-label">Choose a file (CSV, Excel, JSON, SQL)</label>
+            <input type="file" name="file" id="file" class="form-control" accept=".csv,.xlsx,.xls,.json,.sql">
+            <small class="form-text text-muted">Supported formats: .csv, .xlsx, .xls, .json, .sql</small>
+        </div>
+        <button type="submit" class="btn btn-primary">Upload</button>
     </form>
 </section>
 {% endblock %}

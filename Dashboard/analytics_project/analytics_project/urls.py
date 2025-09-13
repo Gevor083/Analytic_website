@@ -22,13 +22,11 @@ from django.urls import path
 from analytics_app import views
 
 
-from django.contrib import admin
-from django.urls import path
-from analytics_app import views
-
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.home, name='home'),
-    path('upload/', views.upload_csv, name='upload'),   # <-- upload_csv
-    path('result/<int:file_id>/', views.results, name='result'),  # <-- results
+    path('', views.home_view, name='home'),
+    path('upload/', views.upload_view, name='upload'),
+    path('result/<int:file_id>/', views.result_view, name='result'),
+    path('files/', views.files_view, name='files'),
+    path('delete/<int:file_id>/', views.delete_file_view, name='delete_file'),
 ]

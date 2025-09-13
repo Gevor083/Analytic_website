@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,31 +6,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Analytics Website{% endblock %}</title>
 
-    <!-- CSS ֆայլեր -->
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'analytics_app/css/base.css' %}">
     <link rel="stylesheet" href="{% static 'analytics_app/css/layout.css' %}">
     <link rel="stylesheet" href="{% static 'analytics_app/css/components.css' %}">
-
-    <!-- JS ֆայլ -->
     <script src="{% static 'analytics_app/js/scripts.js' %}" defer></script>
 </head>
 <body>
     <header>
-        <nav>
-            <ul class="main-nav">
-                <li><a href="{% url 'home' %}">Home</a></li>
-                <li><a href="{% url 'upload' %}">Upload</a></li>
-                <li><a href="{% url 'result' %}">Result</a></li>
-            </ul>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="{% url 'home' %}">Analytics Website</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'home' %}">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'upload' %}">Upload</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'files' %}">Files</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </nav>
     </header>
 
-    <main>
+    <main class="container">
         {% block content %}{% endblock %}
     </main>
 
-    <footer>
-        <p>&copy; 2025 Analytics Website</p>
+    <footer class="bg-light text-center py-3 mt-5">
+        <p class="mb-0">&copy; 2025 Analytics Website</p>
     </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </body>
 </html>

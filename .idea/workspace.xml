@@ -5,11 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7119f4bc-4299-46d3-93cb-701cd7ce26a6" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/static/analytics_app/css/base.css" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/static/analytics_app/css/base.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/files.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/models.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/base.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/result.html" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/result.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/upload.html" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/upload.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_project/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_project/urls.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -83,7 +86,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1757765447967</updated>
-      <workItem from="1757765449066" duration="6055000" />
+      <workItem from="1757765449066" duration="12188000" />
     </task>
     <servers />
   </component>
