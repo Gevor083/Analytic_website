@@ -1,15 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Upload CSV</title>
-</head>
-<body>
-    <h1>Upload CSV File</h1>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <input type="file" name="csv_file" required>
-        <button type="submit">Upload</button>
-    </form>
-</body>
-</html>
+{% extends 'analytics_app/base.html' %}
+
+{% block title %}Upload{% endblock %}
+
+{% block content %}
+<h1>Upload Page</h1>
+<p>Upload your files or data here.</p>
+{% endblock %}

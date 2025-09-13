@@ -5,10 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7119f4bc-4299-46d3-93cb-701cd7ce26a6" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/static/analytics_app/css/base.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/static/analytics_app/css/components.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/static/analytics_app/css/layout.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/static/analytics_app/js/scripts.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/home.html" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/home.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/results.html" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/results.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/upload.html" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/upload.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/home.html" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -82,7 +84,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1757765447967</updated>
-      <workItem from="1757765449066" duration="4724000" />
+      <workItem from="1757765449066" duration="5755000" />
     </task>
     <servers />
   </component>
