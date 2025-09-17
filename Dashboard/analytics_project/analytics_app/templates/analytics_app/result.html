@@ -1,33 +1,53 @@
 {% extends 'analytics_app/base.html' %}
-
 {% load dict_extras %}
 
 {% block title %}Result{% endblock %}
 
 {% block content %}
-<section class="result-section container">
-    <h1 class="mb-4">Results</h1>
-    <p>Here you can see the results of your uploaded data.</p>
-
+<section class="result-section container py-5 fade-in">
+    <h1 class="mb-4 text-primary fw-bold"><i class="fa fa-chart-bar"></i> Results</h1>
+    <p class="mb-4">Here you can see the results of your uploaded data.</p>
     <div class="row">
         {% for item in data %}
             {% with analysis=analysis_data|get_item:item.column_name %}
             <div class="col-md-6 mb-4">
-                <div class="card shadow-sm">
+                <div class="card shadow-sm border-primary">
                     <div class="card-body">
-                        <h5 class="card-title">{{ item.column_name }}</h5>
-                        <p class="card-text">Ընդամենը: <strong>{{ item.value }}</strong></p>
-                        <ul class="list-group mb-2">
-                            <li class="list-group-item">Mean: {{ analysis.stats.mean }}</li>
-                            <li class="list-group-item">Median: {{ analysis.stats.median }}</li>
-                            <li class="list-group-item">Min: {{ analysis.stats.min }}</li>
-                            <li class="list-group-item">Max: {{ analysis.stats.max }}</li>
-                            <li class="list-group-item">Std: {{ analysis.stats.std }}</li>
-                            <li class="list-group-item">Missing: {{ analysis.stats.missing }}</li>
-                            <li class="list-group-item">Outliers: {{ analysis.stats.outlier_count }}</li>
+                        <h5 class="card-title text-primary fw-bold mb-2"><i class="fa fa-table"></i> {{ item.column_name }}</h5>
+                        <p class="card-text mb-3">Total: <span class="badge bg-primary fs-5">{{ item.value }}</span></p>
+                        <ul class="list-group mb-3">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="fa fa-calculator text-primary"></i> Mean</span>
+                                <span class="fw-bold">{{ analysis.stats.mean }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="fa fa-ruler-horizontal text-primary"></i> Median</span>
+                                <span class="fw-bold">{{ analysis.stats.median }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="fa fa-arrow-down text-primary"></i> Min</span>
+                                <span class="fw-bold">{{ analysis.stats.min }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="fa fa-arrow-up text-primary"></i> Max</span>
+                                <span class="fw-bold">{{ analysis.stats.max }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="fa fa-wave-square text-primary"></i> Std</span>
+                                <span class="fw-bold">{{ analysis.stats.std }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="fa fa-question-circle text-primary"></i> Missing</span>
+                                <span class="fw-bold">{{ analysis.stats.missing }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="fa fa-exclamation-triangle text-warning"></i> Outliers</span>
+                                <span class="fw-bold">{{ analysis.stats.outlier_count }}</span>
+                            </li>
                         </ul>
                         {% if analysis.urgent %}
-                        <div class="alert alert-warning">
+                        <div class="alert alert-warning d-flex align-items-center mb-3">
+                            <i class="fa fa-exclamation-circle me-2"></i>
                             <ul class="mb-0">
                                 {% for msg in analysis.urgent %}
                                 <li>{{ msg }}</li>
@@ -35,73 +55,100 @@
                             </ul>
                         </div>
                         {% endif %}
-                        <canvas id="line-{{ item.column_name }}" height="150"></canvas>
-                        <canvas id="hist-{{ item.column_name }}" height="150" class="mt-3"></canvas>
+                        <div class="mb-3">
+                            <canvas id="line-{{ item.column_name }}" height="150"></canvas>
+                        </div>
+                        <div>
+                            <canvas id="hist-{{ item.column_name }}" height="150" class="mt-3"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
             {% endwith %}
         {% empty %}
             <div class="col-12">
-                <p>No results found for this file.</p>
+                <div class="alert alert-info d-flex align-items-center" role="alert">
+                    <i class="fa fa-info-circle me-2"></i> No results found for this file.
+                </div>
             </div>
         {% endfor %}
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const analysisData = JSON.parse('{{ analysis_data|escapejs }}');
-            Object.keys(analysisData).forEach(function(col) {
-                const lineCtx = document.getElementById('line-' + col);
-                if (lineCtx) {
-                    new Chart(lineCtx, {
-                        type: 'line',
-                        data: {
-                            labels: analysisData[col].line.map((_, i) => i + 1),
-                            datasets: [{
-                                label: col,
-                                data: analysisData[col].line,
-                                borderColor: 'rgba(13, 110, 253, 0.7)',
-                                backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                                fill: true,
-                                tension: 0.3
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                legend: { display: false },
-                                title: { display: false }
-                            }
-                        }
-                    });
-                }
-                // Histogram chart
-                const histCtx = document.getElementById('hist-' + col);
-                if (histCtx) {
-                    new Chart(histCtx, {
-                        type: 'bar',
-                        data: {
-                            labels: analysisData[col].histogram.bins.map(b => b.toFixed(2)),
-                            datasets: [{
-                                label: col + ' Histogram',
-                                data: analysisData[col].histogram.counts,
-                                backgroundColor: 'rgba(253, 193, 7, 0.5)',
-                                borderColor: 'rgba(253, 193, 7, 1)',
-                                borderWidth: 1
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                legend: { display: false },
-                                title: { display: false }
-                            }
-                        }
-                    });
-                }
-            });
-        });
-    </script>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Chart.js rendering for each column
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get chart data and analysis data from Django context
+        const chartData = {{ chart_data|safe }};
+        const analysisData = {{ analysis_data|safe }};
+        // For each column, render line and histogram charts
+        Object.keys(chartData).forEach(function(col) {
+            // Line Chart
+            const lineCtx = document.getElementById('line-' + col);
+            if (lineCtx) {
+                new Chart(lineCtx, {
+                    type: 'line',
+                    data: {
+                        labels: chartData[col].map((_, i) => i + 1),
+                        datasets: [{
+                            label: col + ' Values',
+                            data: chartData[col],
+                            borderColor: '#0C4B8E',
+                            backgroundColor: 'rgba(12,75,142,0.1)',
+                            pointRadius: 2,
+                            fill: true,
+                            tension: 0.3,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: true },
+                            title: { display: true, text: col + ' Line Chart', color: '#0C4B8E' }
+                        },
+                        scales: {
+                            x: { title: { display: true, text: 'Index', color: '#0C4B8E' } },
+                            y: { title: { display: true, text: 'Value', color: '#0C4B8E' } }
+                        }
+                    }
+                });
+            }
+            // Histogram Chart
+            const histCtx = document.getElementById('hist-' + col);
+            if (histCtx && analysisData[col] && analysisData[col].histogram) {
+                const bins = analysisData[col].histogram.bins;
+                const counts = analysisData[col].histogram.counts;
+                new Chart(histCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: bins.map((b, i) => {
+                            if (i < bins.length - 1) return `${bins[i].toFixed(2)} - ${bins[i+1].toFixed(2)}`;
+                            return '';
+                        }).slice(0, counts.length),
+                        datasets: [{
+                            label: col + ' Histogram',
+                            data: counts,
+                            backgroundColor: 'rgba(12,75,142,0.7)',
+                            borderColor: '#0C4B8E',
+                            borderWidth: 1,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false },
+                            title: { display: true, text: col + ' Histogram', color: '#0C4B8E' }
+                        },
+                        scales: {
+                            x: { title: { display: true, text: 'Bins', color: '#0C4B8E' } },
+                            y: { title: { display: true, text: 'Count', color: '#0C4B8E' } }
+                        }
+                    }
+                });
+            }
+        });
+    });
+</script>
 {% endblock %}

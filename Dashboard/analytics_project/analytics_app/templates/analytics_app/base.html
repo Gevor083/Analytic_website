@@ -5,52 +5,101 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Analytics Website{% endblock %}</title>
-
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'analytics_app/css/base.css' %}">
     <link rel="stylesheet" href="{% static 'analytics_app/css/layout.css' %}">
     <link rel="stylesheet" href="{% static 'analytics_app/css/components.css' %}">
     <script src="{% static 'analytics_app/js/scripts.js' %}" defer></script>
+    <style>
+        body { font-family: 'Inter', Arial, sans-serif; }
+        .fade-in { animation: fadeIn 0.7s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .navbar {
+            background: linear-gradient(90deg, #0C4B8E 60%, #1565c0 100%);
+            box-shadow: 0 2px 8px rgba(12,75,142,0.08);
+            border-radius: 0 0 16px 16px;
+        }
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        .navbar-brand svg {
+            width: 32px; height: 32px;
+        }
+        .nav-link {
+            border-radius: 8px;
+            margin-right: 8px;
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+        }
+        .nav-link:hover {
+            background: #1565c0;
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(12,75,142,0.12);
+        }
+        footer {
+            background: linear-gradient(90deg, #0C4B8E 60%, #1565c0 100%);
+            color: #fff;
+            border-radius: 16px 16px 0 0;
+            box-shadow: 0 -2px 8px rgba(12,75,142,0.08);
+        }
+        .footer-icons a {
+            color: #fff;
+            margin: 0 8px;
+            font-size: 1.2rem;
+            transition: color 0.2s;
+        }
+        .footer-icons a:hover {
+            color: #ffd700;
+        }
+    </style>
 </head>
-<body>
+<body class="fade-in">
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+        <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
             <div class="container-fluid">
-                <a class="navbar-brand" href="{% url 'home' %}">Analytics Website</a>
+                <a class="navbar-brand" href="{% url 'home' %}">
+                    <!-- Simple analytics SVG icon -->
+                    <svg fill="none" viewBox="0 0 32 32"><rect x="4" y="20" width="4" height="8" rx="2" fill="#fff"/><rect x="12" y="12" width="4" height="16" rx="2" fill="#fff"/><rect x="20" y="6" width="4" height="22" rx="2" fill="#fff"/><rect x="28" y="2" width="4" height="26" rx="2" fill="#fff"/></svg>
+                    Analytics Website
+                </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'home' %}">Home</a>
+                            <a class="nav-link" href="{% url 'home' %}"><i class="fa fa-home"></i> Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'upload' %}">Upload</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'files' %}">Files</a>
+                            <a class="nav-link" href="{% url 'upload' %}"><i class="fa fa-upload"></i> Upload</a>
                         </li>
                         {% if request.user.is_authenticated %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'my_uploads' %}">My Uploads</a>
+                                <a class="nav-link" href="{% url 'my_uploads' %}"><i class="fa fa-history"></i> My Uploads</a>
                             </li>
                             {% if request.user.is_staff or request.user.is_superuser %}
                                 <li class="nav-item">
-                                    <a class="nav-link" href="{% url 'admin_dashboard' %}">Admin Dashboard</a>
+                                    <a class="nav-link" href="{% url 'admin_dashboard' %}"><i class="fa fa-user-shield"></i> Admin Dashboard</a>
                                 </li>
                             {% endif %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                                <a class="nav-link" href="{% url 'logout' %}"><i class="fa fa-sign-out-alt"></i> Logout</a>
                             </li>
                         {% else %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'login' %}">Login</a>
+                                <a class="nav-link" href="{% url 'login' %}"><i class="fa fa-sign-in-alt"></i> Login</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'register' %}">Register</a>
+                                <a class="nav-link" href="{% url 'register' %}"><i class="fa fa-user-plus"></i> Register</a>
                             </li>
                         {% endif %}
                     </ul>
@@ -58,15 +107,18 @@
             </div>
         </nav>
     </header>
-
-    <main class="container">
+    <main class="container py-4">
         {% block content %}{% endblock %}
     </main>
-
-    <footer class="bg-light text-center py-3 mt-5">
-        <p class="mb-0">&copy; 2025 Analytics Website</p>
+    <footer class="text-center py-4 mt-5">
+        <div class="footer-icons mb-2">
+            <a href="#"><i class="fab fa-facebook-f"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#"><i class="fab fa-github"></i></a>
+        </div>
+        <p class="mb-0">&copy; 2025 Analytics Website &mdash; Powered by Django</p>
     </footer>
-
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Chart.js CDN -->

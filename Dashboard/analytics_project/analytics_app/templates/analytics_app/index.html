@@ -3,20 +3,42 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<section class="hero">
-    <h1>Welcome to Analytics Website</h1>
-    <p>Get professional insights and data analytics at your fingertips.</p>
-    <a href="{% url 'upload' %}" class="btn-primary">Upload Data</a>
+<section class="hero text-center py-5 mb-5" style="background: linear-gradient(90deg, #0C4B8E 60%, #1565c0 100%); color: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(12,75,142,0.12);">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-3"><i class="fa fa-chart-line"></i> Welcome to Analytics Website</h1>
+        <p class="lead mb-4">Get professional insights and data analytics at your fingertips.</p>
+        <a href="{% url 'upload' %}" class="btn btn-lg btn-light text-primary fw-bold shadow-sm"><i class="fa fa-upload"></i> Upload Data</a>
+    </div>
 </section>
 
-<section class="features">
-    <div class="feature-card">
-        <h3>Feature 1</h3>
-        <p>Description of feature 1</p>
-    </div>
-    <div class="feature-card">
-        <h3>Feature 2</h3>
-        <p>Description of feature 2</p>
+<section class="features container mb-5">
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-primary h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <span class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:48px;height:48px;font-size:1.5rem;">
+                            <i class="fa fa-database"></i>
+                        </span>
+                    </div>
+                    <h5 class="card-title">Upload & Analyze</h5>
+                    <p class="card-text">Easily upload your CSV, JSON, or SQL files and get instant analytics.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm border-primary h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <span class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:48px;height:48px;font-size:1.5rem;">
+                            <i class="fa fa-chart-bar"></i>
+                        </span>
+                    </div>
+                    <h5 class="card-title">Visual Insights</h5>
+                    <p class="card-text">View your data with beautiful charts, tables, and summary statistics.</p>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 {% endblock %}

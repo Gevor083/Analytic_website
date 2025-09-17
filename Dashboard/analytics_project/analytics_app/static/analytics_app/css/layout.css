@@ -1,6 +1,6 @@
 /* Layout */
 header {
-    background-color: #1a1a1a;
+    background-color: #0C4B8E;
     color: #fff;
     padding: 20px 0;
 }
@@ -19,7 +19,7 @@ header nav ul.main-nav li a {
 }
 
 header nav ul.main-nav li a:hover {
-    background-color: #0077ff;
+    background-color: #1565c0;
     color: #fff;
     border-radius: 5px;
 }
@@ -31,7 +31,7 @@ main {
 }
 
 footer {
-    background-color: #1a1a1a;
+    background-color: #0C4B8E;
     color: #fff;
     text-align: center;
     padding: 20px;

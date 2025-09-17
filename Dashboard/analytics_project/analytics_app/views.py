@@ -44,7 +44,11 @@ def upload_view(request):
             })
 
         try:
-            obj = UploadedFile.objects.create(file=uploaded_file, file_type=file_type)
+            obj = UploadedFile.objects.create(
+                file=uploaded_file,
+                file_type=file_type,
+                user=request.user if request.user.is_authenticated else None
+            )
 
             # Read file according to type
             try:
@@ -171,12 +175,6 @@ def result_view(request, file_id):
     return render(request, 'analytics_app/result.html', context)
 
 
-# Վերադարձնում ենք բոլոր վերբեռնված ֆայլերը
-def files_view(request):
-    files = UploadedFile.objects.all().order_by('-id')
-    return render(request, 'analytics_app/files.html', {'files': files})
-
-
 def delete_file_view(request, file_id):
     file_obj = get_object_or_404(UploadedFile, id=file_id)
     if request.method == 'POST':
@@ -189,8 +187,8 @@ def delete_file_view(request, file_id):
             messages.success(request, 'File deleted successfully.')
         except Exception as e:
             messages.error(request, 'Error deleting file.')
-        return redirect('files')
-    return redirect('files')
+        return redirect('my_uploads')
+    return redirect('my_uploads')
 
 
 @login_required
@@ -219,14 +217,30 @@ def logout_view(request):
 
 def register_view(request):
     if request.method == 'POST':
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
+        username = request.POST.get('username', '').strip()
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '').strip()
+        errors = []
+        if not username:
+            errors.append('Username is required.')
+        if not email:
+            errors.append('Email is required.')
+        if not password:
+            errors.append('Password is required.')
+        if len(password) < 6:
+            errors.append('Password must be at least 6 characters.')
         if User.objects.filter(username=username).exists():
-            return render(request, 'analytics_app/register.html', {'error': 'Username already exists.'})
-        user = User.objects.create_user(username=username, email=email, password=password)
-        login(request, user)
-        return redirect('home')
+            errors.append('Username already exists.')
+        if User.objects.filter(email=email).exists():
+            errors.append('Email already registered.')
+        if errors:
+            return render(request, 'analytics_app/register.html', {'error': ' '.join(errors)})
+        try:
+            user = User.objects.create_user(username=username, email=email, password=password)
+            login(request, user)
+            return redirect('home')
+        except Exception as e:
+            return render(request, 'analytics_app/register.html', {'error': f'Error: {str(e)}'})
     return render(request, 'analytics_app/register.html')
 
 
