@@ -1,0 +1,8 @@
+Django==5.2.6
+psycopg2-binary>=2.9
+celery==5.5.3
+redis>=4.5
+django-redis>=6.0
+python-dotenv>=1.0
+pandas>=2.2
+numpy>=1.26

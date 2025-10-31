@@ -4,14 +4,52 @@ from django.db import models
 
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.conf import settings
+import os
+
+def validate_file_size(value):
+    if value.size > settings.MAX_UPLOAD_SIZE:
+        raise ValidationError(f'File size cannot exceed {settings.MAX_UPLOAD_SIZE/(1024*1024)}MB')
+
+def validate_file_type(value):
+    ext = os.path.splitext(value.name)[1][1:].lower()
+    if ext not in settings.ALLOWED_FILE_TYPES:
+        raise ValidationError(f'Unsupported file type. Allowed types: {", ".join(settings.ALLOWED_FILE_TYPES)}')
 
 class UploadedFile(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    file = models.FileField(upload_to='uploads/')
-    uploaded_at = models.DateTimeField(auto_now_add=True)
+    file = models.FileField(
+        upload_to='uploads/',
+        validators=[validate_file_size, validate_file_type]
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True, db_index=True)
     file_type = models.CharField(max_length=20, default='csv')
+    processed = models.BooleanField(default=False)
+    error_message = models.TextField(null=True, blank=True)
+    size = models.BigIntegerField(default=0)
+
+    class Meta:
+        ordering = ['-uploaded_at']
+        indexes = [
+            models.Index(fields=['user', '-uploaded_at']),
+            models.Index(fields=['file_type']),
+        ]
+
+    def save(self, *args, **kwargs):
+        if self.file:
+            self.size = self.file.size
+        super().save(*args, **kwargs)
 
 class ProcessedData(models.Model):
-    uploaded_file = models.ForeignKey(UploadedFile, on_delete=models.CASCADE)
-    column_name = models.CharField(max_length=255)
+    uploaded_file = models.ForeignKey(UploadedFile, on_delete=models.CASCADE, related_name='processed_data')
+    column_name = models.CharField(max_length=255, db_index=True)
     value = models.FloatField()
+    stats = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['uploaded_file', 'column_name']),
+        ]
+        unique_together = ['uploaded_file', 'column_name']

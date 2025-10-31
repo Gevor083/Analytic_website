@@ -19,13 +19,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
+# Load environment variables
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-_gk)(w=)d+=inj#bgp30p&%=y-n3^g*l!+*h1*l9z-6r83s@i9'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
 # Application definition
@@ -76,11 +82,11 @@ WSGI_APPLICATION = 'analytics_project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'analytics_db',
-        'USER': 'postgres',
-        'PASSWORD': 'Gevor1121*',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }
 
@@ -115,6 +121,36 @@ USE_I18N = True
 
 USE_TZ = True
 
+
+# File Upload Settings
+MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10MB
+ALLOWED_FILE_TYPES = ['csv', 'json', 'sql']
+# Cache and Celery settings
+# Use Redis when explicitly enabled (production or when developer enabled it).
+USE_REDIS = os.getenv('USE_REDIS', 'False').lower() == 'true'
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://127.0.0.1:6379/0')
+CELERY_TASK_ALWAYS_EAGER = os.getenv('CELERY_EAGER', 'False').lower() == 'true'
+
+if USE_REDIS:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': os.getenv('REDIS_LOCATION', 'redis://127.0.0.1:6379/1'),
+        }
+    }
+    # Session Settings
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+    SESSION_CACHE_ALIAS = 'default'
+else:
+    # Local-memory cache for development when Redis isn't available.
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'unique-snowflake',
+        }
+    }
+    # Use DB-backed sessions to avoid relying on cache for sessions in dev
+    SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/

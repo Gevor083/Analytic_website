@@ -6,7 +6,84 @@
   <component name="ChangeListManager">
     <list default="true" id="7119f4bc-4299-46d3-93cb-701cd7ce26a6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/base.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/result.html" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/result.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templatetags/dict_extras.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templatetags/dict_extras.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_project/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_project/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_1990tyC.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_1DBmzOc.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_2k68s90.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_4YGBEDp.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_9Mo30aF.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_CIvdaTW.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_DchoDOA.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_Gzpauf1.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_HDkU2tX.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_IDa7yQO.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_KicSNtV.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_L70BAUK.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_LyA6tJH.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_MuzEl5g.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_Mw6iWWk.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_P2Fqt8x.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_RMzabcm.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_T8B8ven.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_UOcXVAt.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_VCpGWeX.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_VVNtHZU.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_VVVvsv0.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_WvOBnPM.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_ZcWgadE.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_ZwRKYwk.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_aW7uBwO.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_cngNvxl.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_cuIEhMH.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_eErilTH.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_hktGbVB.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_lHVLctt.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_nRSVxZo.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_nrkSJ1k.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_tANqvKW.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/Salaries_x7sK9EJ.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/US_STATE_recipes.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/US_recipes.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/admin_test.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/annual-enterprise-survey-2024-financial-year-provisional_4Ye6BPr.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/annual-enterprise-survey-2024-financial-year-provisional_7RHaG0H.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/annual-enterprise-survey-2024-financial-year-provisional_B50zElI.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/annual-enterprise-survey-2024-financial-year-provisional_N5HLxD1.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/annual-enterprise-survey-2024-financial-year-provisional_Putb3v8.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/annual-enterprise-survey-2024-financial-year-provisional_w3Ja3Y1.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/annual-enterprise-survey-2024-financial-year-provisional_zYRmNpC.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/flights-1m-parquet.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/flights-1m-parquet_avOTctD.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/grouped_salaries.xlsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/hypothec_schedule.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/hypothec_schedule_Ho38YXg.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/hypothec_schedule_IXFuWQr.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/hypothec_schedule_PoizIHu.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/hypothec_schedule_Tu5r8aM.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/hypothec_schedule_akruSKL.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/hypothec_schedule_c2nculs.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/hypothec_schedule_erz6mBX.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/hypothec_schedule_kydAUTM.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/hypothec_schedule_nBFtVMP.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/hypothec_schedule_uRE3Lmk.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/loan_schedule.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/loan_schedule_hb2SRDz.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/sales_data.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/sales_data_gxdtJgW.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/sales_data_postgres.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/sample1.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/sample1_QChB76D.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/sample1_VuA7w1k.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/test01_U41nSZK.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/test01_koYTcvo.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/test01_krKfOit.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/test01_sziu2NP.csv" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -57,7 +134,7 @@
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
@@ -99,6 +176,16 @@
       <workItem from="1758833495941" duration="26000" />
       <workItem from="1758877757849" duration="650000" />
       <workItem from="1758883710050" duration="1904000" />
+      <workItem from="1758960296705" duration="26000" />
+      <workItem from="1759217399430" duration="146000" />
+      <workItem from="1759224636418" duration="169000" />
+      <workItem from="1761125835758" duration="4178000" />
+      <workItem from="1761136984698" duration="1734000" />
+      <workItem from="1761139091735" duration="582000" />
+      <workItem from="1761156058086" duration="671000" />
+      <workItem from="1761158435657" duration="618000" />
+      <workItem from="1761903316614" duration="1418000" />
+      <workItem from="1761938981937" duration="13000" />
     </task>
     <servers />
   </component>

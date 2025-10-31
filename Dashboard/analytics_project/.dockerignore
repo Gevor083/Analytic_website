@@ -1,0 +1,13 @@
+venv
+__pycache__
+*.pyc
+.pytest_cache
+.mypy_cache
+.env
+uploads/*
+node_modules
+*.log
+dist
+build
+Dockerfile
+docker-compose*.yml

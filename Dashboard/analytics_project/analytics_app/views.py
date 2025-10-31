@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from .models import UploadedFile, ProcessedData
 import pandas as pd
 import json
@@ -8,6 +9,51 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
+import numpy as np
+import datetime
+
+
+def make_json_serializable(o):
+    # primitives
+    if o is None:
+        return None
+    if isinstance(o, (str, bool, int, float)):
+        return o
+    # numpy scalar types
+    if isinstance(o, (np.integer, np.int64, np.int32)):
+        return int(o)
+    if isinstance(o, (np.floating, np.float64, np.float32)):
+        return float(o)
+    if isinstance(o, (np.bool_,)):
+        return bool(o)
+    # datetime
+    if isinstance(o, (datetime.datetime, datetime.date)):
+        return o.isoformat()
+    # lists/tuples
+    if isinstance(o, (list, tuple)):
+        return [make_json_serializable(x) for x in o]
+    # numpy arrays
+    if isinstance(o, np.ndarray):
+        return [make_json_serializable(x) for x in o.tolist()]
+    # dicts
+    if isinstance(o, dict):
+        return {str(k): make_json_serializable(v) for k, v in o.items()}
+    # pandas types
+    try:
+        import pandas as _pd
+        if isinstance(o, (_pd.Timestamp, _pd.Timedelta)):
+            return str(o)
+        if isinstance(o, _pd.Series):
+            return [make_json_serializable(x) for x in o.tolist()]
+        if isinstance(o, _pd.DataFrame):
+            return [make_json_serializable(x) for x in o.values.tolist()]
+    except Exception:
+        pass
+    # fallback
+    try:
+        return json.loads(json.dumps(o))
+    except Exception:
+        return str(o)
 
 
 # Գլխավոր էջ
@@ -17,161 +63,105 @@ def home_view(request):
 
 # Upload էջ
 def upload_view(request):
-    if request.method == 'POST':
-        uploaded_file = request.FILES.get('file')
+    if request.method != 'POST':
+        return render(request, 'analytics_app/upload.html')
 
-        if not uploaded_file:
-            return render(request, 'analytics_app/upload.html', {
-                'error': 'No file was uploaded.'
-            })
+    uploaded_file = request.FILES.get('file')
+    if not uploaded_file:
+        return render(request, 'analytics_app/upload.html', {'error': 'No file was uploaded.'})
 
-        filename = uploaded_file.name.lower()
-        # Only allow CSV, JSON, SQL
-        if filename.endswith('.csv'):
-            file_type = 'csv'
-        elif filename.endswith('.json'):
-            file_type = 'json'
-        elif filename.endswith('.sql'):
-            file_type = 'sql'
-        else:
-            return render(request, 'analytics_app/upload.html', {
-                'error': 'Unsupported file type. Please upload CSV, JSON, or SQL files.'
-            })
+    # Validate file type
+    filename = uploaded_file.name.lower()
+    file_type = next((ext for ext in settings.ALLOWED_FILE_TYPES if filename.endswith(f'.{ext}')), None)
+    if not file_type:
+        return render(request, 'analytics_app/upload.html', 
+                     {'error': f'Unsupported file type. Allowed types: {", ".join(settings.ALLOWED_FILE_TYPES)}'})
 
-        if uploaded_file.size == 0:
-            return render(request, 'analytics_app/upload.html', {
-                'error': 'The uploaded file is empty.'
-            })
+    # Validate file size
+    if uploaded_file.size > settings.MAX_UPLOAD_SIZE:
+        return render(request, 'analytics_app/upload.html', 
+                     {'error': f'File too large. Maximum size is {settings.MAX_UPLOAD_SIZE/(1024*1024)}MB'})
 
+    if uploaded_file.size == 0:
+        return render(request, 'analytics_app/upload.html', {'error': 'The uploaded file is empty.'})
+
+    try:
+        obj = UploadedFile.objects.create(
+            file=uploaded_file,
+            file_type=file_type,
+            user=request.user if request.user.is_authenticated else None
+        )
+
+        # Queue the file for processing. In development we may run tasks eagerly
+        from .tasks import process_uploaded_file
         try:
-            obj = UploadedFile.objects.create(
-                file=uploaded_file,
-                file_type=file_type,
-                user=request.user if request.user.is_authenticated else None
-            )
-
-            # Read file according to type
-            try:
-                if file_type == 'csv':
-                    df = pd.read_csv(uploaded_file)
-                elif file_type == 'json':
-                    df = pd.read_json(uploaded_file)
-                elif file_type == 'sql':
-                    return render(request, 'analytics_app/upload.html', {
-                        'error': 'SQL file import is not supported yet.'
-                    })
-            except Exception as e:
-                return render(request, 'analytics_app/upload.html', {
-                    'error': f'Error processing file: {str(e)}'
-                })
-
-            if df.empty:
-                return render(request, 'analytics_app/upload.html', {
-                    'error': 'The uploaded file contains no data.'
-                })
-
-            # Strictly select only float and int columns, EXCLUDE bool columns and columns with only bool values
-            numeric_columns = []
-            for col in df.columns:
-                # Ensure column is a Series
-                if not isinstance(df[col], pd.Series):
-                    continue
-                if pd.api.types.is_bool_dtype(df[col]):
-                    continue
-                non_null = df[col].dropna()
-                if not non_null.empty and non_null.apply(lambda x: isinstance(x, bool)).all():
-                    continue
-                if pd.api.types.is_float_dtype(df[col]) or pd.api.types.is_integer_dtype(df[col]):
-                    numeric_columns.append(col)
-            chart_data = {}
-            analysis_data = {}
-            for col in numeric_columns:
-                col_data = df[col].dropna()
-                stats = {}
-                try:
-                    stats = {
-                        'mean': float(col_data.mean()) if not col_data.empty else None,
-                        'median': float(col_data.median()) if not col_data.empty else None,
-                        'min': float(col_data.min()) if not col_data.empty else None,
-                        'max': float(col_data.max()) if not col_data.empty else None,
-                        'std': float(col_data.std()) if not col_data.empty else None,
-                        'missing': int(df[col].isna().sum()) if isinstance(df[col].isna(), pd.Series) else 0,
-                        'count': int(col_data.count()),
-                    }
-                    # Outlier detection (IQR method)
-                    q1 = col_data.quantile(0.25)
-                    q3 = col_data.quantile(0.75)
-                    iqr = q3 - q1
-                    outliers = col_data[(col_data < q1 - 1.5 * iqr) | (col_data > q3 + 1.5 * iqr)]
-                    stats['outliers'] = outliers.tolist()
-                    stats['outlier_count'] = len(outliers)
-                    # Histogram data
-                    if not col_data.empty and isinstance(col_data, pd.Series):
-                        hist_result = pd.cut(col_data, bins=10, retbins=True, labels=False, include_lowest=True)
-                        hist_bins = pd.cut(col_data, bins=10, retbins=True)[1]
-                        hist_counts = [int((hist_result == i).sum()) for i in range(10)]
-                        hist_data = {
-                            'bins': [float(b) for b in hist_bins],
-                            'counts': hist_counts
-                        }
-                    else:
-                        hist_data = {'bins': [], 'counts': []}
-                except Exception as e:
-                    stats['error'] = f'Error in stats calculation: {str(e)}'
-                    hist_data = {'bins': [], 'counts': []}
-                # Urgent info
-                urgent = []
-                if stats.get('missing', 0) > 0:
-                    urgent.append(f"{stats['missing']} missing values detected.")
-                if stats.get('outlier_count', 0) > 0:
-                    urgent.append(f"{stats['outlier_count']} outliers detected.")
-                if stats.get('count', 0) == 0:
-                    urgent.append("No valid data in this column.")
-                # Store all analysis
-                analysis_data[col] = {
-                    'stats': stats,
-                    'urgent': urgent,
-                    'histogram': hist_data,
-                    'line': df[col].tolist() if isinstance(df[col], pd.Series) else [],
-                }
-                # Save total as before
-                try:
-                    total = float(df[col].sum()) if isinstance(df[col], pd.Series) and not df[col].empty else 0.0
-                except Exception:
-                    total = 0.0
-                ProcessedData.objects.create(
-                    uploaded_file=obj,
-                    column_name=col,
-                    value=total
-                )
-                chart_data[col] = df[col].tolist() if isinstance(df[col], pd.Series) else []
-            # Store analysis data in session
-            request.session['analysis_data'] = json.dumps(analysis_data)
-            request.session['chart_data'] = json.dumps(chart_data)
-            # ✅ Redirect դեպի result page
-            return redirect('result', file_id=obj.id)
-
+            if getattr(settings, 'CELERY_TASK_ALWAYS_EAGER', False):
+                # Run synchronously in-process to avoid needing a broker/worker in dev
+                process_uploaded_file(obj.id)
+            else:
+                process_uploaded_file.delay(obj.id)
         except Exception as e:
-            return render(request, 'analytics_app/upload.html', {
-                'error': f'Unexpected error: {str(e)}'
-            })
+            # Record error on the UploadedFile and show a friendly message
+            obj.error_message = str(e)
+            obj.save()
+            return render(request, 'analytics_app/upload.html', {'error': f'Unexpected error: {str(e)}'})
 
-    # Եթե GET է, վերադարձնում ենք upload form-ը
-    return render(request, 'analytics_app/upload.html')
+        messages.success(request, 'File uploaded successfully! Processing has started...')
 
+        # Redirect straight away; processing runs in background or was executed inline above
+        return redirect(f"{reverse('result', kwargs={'file_id': obj.id})}?show_modal=1")
+
+    except Exception as e:
+        # Return upload page with error message on unexpected exception
+        return render(request, 'analytics_app/upload.html', {'error': f'Unexpected error: {str(e)}'})
 
 # Արդյունքների էջ
 def result_view(request, file_id):
     file_obj = get_object_or_404(UploadedFile, id=file_id)
-    data = ProcessedData.objects.filter(uploaded_file=file_obj)
-    chart_data = json.loads(request.session.get('chart_data', '{}'))
-    analysis_data = json.loads(request.session.get('analysis_data', '{}'))
+    
+    if not file_obj.processed and not file_obj.error_message:
+        messages.info(request, 'File is still being processed. Please refresh the page.')
+        return render(request, 'analytics_app/result.html', {'file': file_obj, 'processing': True})
+    
+    if file_obj.error_message:
+        messages.error(request, f'Error processing file: {file_obj.error_message}')
+        return render(request, 'analytics_app/result.html', {'file': file_obj, 'error': True})
+    
+    data = ProcessedData.objects.filter(uploaded_file=file_obj).select_related('uploaded_file')
+    
+    chart_data = {}
+    analysis_data = {}
+    
+    for processed_data in data:
+        column_name = processed_data.column_name
+        stats = processed_data.stats
+        
+        analysis_data[column_name] = {
+            'stats': stats,
+            'urgent': [],
+        }
+        
+        if stats.get('missing', 0) > 0:
+            analysis_data[column_name]['urgent'].append(f"{stats['missing']} missing values detected.")
+            
+        if 'histogram' in stats:
+            chart_data[column_name] = stats['histogram']
+    # Also provide JSON-serialized strings specifically for the JS in the template
+    chart_data = make_json_serializable(chart_data)
+    analysis_data = make_json_serializable(analysis_data)
+
+    chart_data_json = json.dumps(chart_data)
+    analysis_data_json = json.dumps(analysis_data)
+
     context = {
         'file': file_obj,
         'data': data,
         'chart_data': chart_data,
-        'analysis_data': analysis_data
+        'analysis_data': analysis_data,
+        'chart_data_json': chart_data_json,
+        'analysis_data_json': analysis_data_json,
     }
+    context['show_modal'] = request.GET.get('show_modal', '0')
     return render(request, 'analytics_app/result.html', context)
 
 

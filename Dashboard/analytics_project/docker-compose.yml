@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      # map container 5432 to host 5433 to avoid conflict with local Postgres
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    restart: always
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    command: bash -c "./entrypoint.sh && python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./:/app
+      - ./uploads:/app/uploads
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./.env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - REDIS_LOCATION=${REDIS_LOCATION}
+      - USE_REDIS=${USE_REDIS}
+      - CELERY_EAGER=${CELERY_EAGER}
+    entrypoint: ["/app/entrypoint.sh"]
+
+  worker:
+    build: .
+    command: celery -A analytics_project worker -l info
+    volumes:
+      - ./:/app
+      - ./uploads:/app/uploads
+    env_file:
+      - ./.env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - REDIS_LOCATION=${REDIS_LOCATION}
+      - USE_REDIS=${USE_REDIS}
+      - CELERY_EAGER=${CELERY_EAGER}
+    entrypoint: ["/app/entrypoint.sh"]
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A analytics_project inspect ping -d celery@$$HOSTNAME"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
