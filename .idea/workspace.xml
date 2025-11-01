@@ -5,11 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7119f4bc-4299-46d3-93cb-701cd7ce26a6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/analytics_app/management/commands/fix_uploads.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/analytics_app/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/analytics_app/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/analytics_app/static/analytics_app/css/layout.css" beforeDir="false" afterPath="$PROJECT_DIR$/analytics_app/static/analytics_app/css/layout.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/analytics_app/templates/analytics_app/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/analytics_app/templates/analytics_app/base.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -115,6 +112,7 @@
       <workItem from="1761988991718" duration="12000" />
       <workItem from="1761995348876" duration="197000" />
       <workItem from="1761995618700" duration="4661000" />
+      <workItem from="1762011417891" duration="1286000" />
     </task>
     <servers />
   </component>

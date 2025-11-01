@@ -18,11 +18,17 @@ def validate_file_type(value):
     if ext not in settings.ALLOWED_FILE_TYPES:
         raise ValidationError(f'Unsupported file type. Allowed types: {", ".join(settings.ALLOWED_FILE_TYPES)}')
 
+def get_upload_path(instance, filename):
+    """
+    Custom function to determine the upload path.
+    Returns just the filename, which will place it directly in MEDIA_ROOT
+    """
+    return filename
+
 class UploadedFile(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     file = models.FileField(
-        # Store files directly under MEDIA_ROOT (uploads/) so files are not nested
-        upload_to='',
+        upload_to=get_upload_path,
         validators=[validate_file_size, validate_file_type]
     )
     uploaded_at = models.DateTimeField(auto_now_add=True, db_index=True)
