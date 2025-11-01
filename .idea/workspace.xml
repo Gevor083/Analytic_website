@@ -5,60 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7119f4bc-4299-46d3-93cb-701cd7ce26a6" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/csv-editor.xml" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/analytics_app/management/commands/fix_uploads.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/.dockerignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/README_DOCKER.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/admin.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/apps.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/migrations/0001_initial.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/migrations/0002_uploadedfile_file_type.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/migrations/0003_alter_uploadedfile_options_processeddata_created_at_and_more.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/migrations/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/models.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/static/analytics_app/css/base.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/static/analytics_app/css/components.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/static/analytics_app/css/layout.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/static/analytics_app/js/scripts.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/tasks.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/admin_dashboard.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/base.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/files.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/index.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/login.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/my_uploads.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/register.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/result.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templates/analytics_app/upload.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templatetags/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/templatetags/dict_extras.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/tests.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_app/views.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_project/.env" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_project/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_project/asgi.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_project/celery.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_project/settings.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_project/urls.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/analytics_project/wsgi.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/docker-compose.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/entrypoint.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/manage.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/requirements.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/annual-enterprise-survey-2024-financial-year-provisional-size-bands.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/annual-enterprise-survey-2024-financial-year-provisional-size-bands_bcrivin.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/annual-enterprise-survey-2024-financial-year-provisional.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/sales_data.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/sales_data_PH9SuJp.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/sales_data_RER4L3Y.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/sales_data_UQExMEb.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/sales_data_nOGOiDu.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/sales_data_ot8rxTs.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/sales_data_pIACWQ3.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboard/analytics_project/uploads/test01.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/analytics_app/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/analytics_app/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/analytics_app/static/analytics_app/css/layout.css" beforeDir="false" afterPath="$PROJECT_DIR$/analytics_app/static/analytics_app/css/layout.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/analytics_app/templates/analytics_app/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/analytics_app/templates/analytics_app/base.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -163,7 +114,7 @@
       <workItem from="1761938981937" duration="13000" />
       <workItem from="1761988991718" duration="12000" />
       <workItem from="1761995348876" duration="197000" />
-      <workItem from="1761995618700" duration="2904000" />
+      <workItem from="1761995618700" duration="4661000" />
     </task>
     <servers />
   </component>

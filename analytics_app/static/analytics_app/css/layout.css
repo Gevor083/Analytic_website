@@ -3,6 +3,9 @@ header {
     background-color: #0C4B8E;
     color: #fff;
     padding: 20px 0;
+    /* Round bottom corners */
+    border-bottom-left-radius: 25px;
+    border-bottom-right-radius: 25px;
 }
 
 header nav ul.main-nav {

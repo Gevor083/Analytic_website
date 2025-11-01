@@ -20,10 +20,20 @@
         body { font-family: 'Inter', Arial, sans-serif; }
         .fade-in { animation: fadeIn 0.7s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .navbar {
+        /* Apply the visual header background and rounding here so the rounded corners are visible
+           even if the navbar children stretch full-width. The navbar itself should be transparent. */
+        header {
             background: linear-gradient(90deg, #0C4B8E 60%, #1565c0 100%);
             box-shadow: 0 2px 8px rgba(12,75,142,0.08);
-            border-radius: 0 0 16px 16px;
+            border-bottom-left-radius: 25px;
+            border-bottom-right-radius: 25px;
+            overflow: hidden; /* clip nav children to the rounded corners */
+        }
+        .navbar {
+            background: transparent !important; /* let header provide the visible background */
+            box-shadow: none;
+            border-radius: 0;
+            overflow: visible;
         }
         .navbar-brand {
             display: flex;

@@ -21,7 +21,8 @@ def validate_file_type(value):
 class UploadedFile(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     file = models.FileField(
-        upload_to='uploads/',
+        # Store files directly under MEDIA_ROOT (uploads/) so files are not nested
+        upload_to='',
         validators=[validate_file_size, validate_file_type]
     )
     uploaded_at = models.DateTimeField(auto_now_add=True, db_index=True)
