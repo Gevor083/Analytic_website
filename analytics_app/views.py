@@ -178,6 +178,24 @@ def result_view(request, file_id):
     chart_data_json = json.dumps(chart_data)
     analysis_data_json = json.dumps(analysis_data)
 
+    # Get the raw data from the file for X-axis selection
+    try:
+        if file_obj.file_type == 'csv':
+            df = pd.read_csv(file_obj.file.path)
+        elif file_obj.file_type == 'json':
+            df = pd.read_json(file_obj.file.path)
+        elif file_obj.file_type == 'parquet':
+            df = pd.read_parquet(file_obj.file.path)
+        else:
+            df = pd.DataFrame()
+        
+        # Convert DataFrame to a dictionary format
+        raw_data = df.to_dict(orient='records')
+        raw_data_json = json.dumps(make_json_serializable(raw_data))
+    except Exception as e:
+        raw_data = []
+        raw_data_json = '[]'
+
     context = {
         'file': file_obj,
         'data': data,
@@ -185,6 +203,7 @@ def result_view(request, file_id):
         'analysis_data': analysis_data,
         'chart_data_json': chart_data_json,
         'analysis_data_json': analysis_data_json,
+        'raw_data_json': raw_data_json
     }
     context['show_modal'] = request.GET.get('show_modal', '0')
     return render(request, 'analytics_app/result.html', context)

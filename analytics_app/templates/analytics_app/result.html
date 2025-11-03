@@ -146,6 +146,14 @@
                         </div>
                         {% endif %}
                         <div class="mb-3">
+                            <div class="x-axis-selector mb-2">
+                                <label class="form-label">Select X-axis: </label>
+                                <select class="form-select form-select-sm d-inline-block w-auto" 
+                                        data-chart="line-{{ item.column_name|slugify }}"
+                                        data-y-field="{{ item.column_name|escapejs }}">
+                                    <!-- Options will be populated by JavaScript -->
+                                </select>
+                            </div>
                             <canvas id="line-{{ item.column_name|slugify }}" data-col="{{ item.column_name|escapejs }}" height="150"></canvas>
                         </div>
                         <div>
@@ -174,6 +182,7 @@
         // Get chart data and analysis data from Django context (JSON-serialized strings)
         let chartData = {{ chart_data_json|safe }};
         let analysisData = {{ analysis_data_json|safe }};
+        let rawData = {{ raw_data_json|safe }};
 
         // Ensure chartData and analysisData are objects (parse if they are strings)
         try {
@@ -191,6 +200,41 @@
             {% endfor %}
         } catch (e) { /* ignore if template loop empty */ }
 
+        // Function to determine if a value is numeric
+        const isNumeric = (value) => {
+            return !isNaN(value) && value !== null && value !== '';
+        };
+
+        // Function to get numeric fields from the raw data
+        const getNumericFields = () => {
+            if (!rawData || !rawData.length) return [];
+            const numericFields = new Set();
+            
+            Object.keys(rawData[0]).forEach(field => {
+                // Check first few rows to determine if the field is numeric
+                const isNumericField = rawData.slice(0, 10).every(row => isNumeric(row[field]));
+                if (isNumericField) {
+                    numericFields.add(field);
+                }
+            });
+            
+            return Array.from(numericFields);
+        };
+
+        // Get all numeric fields
+        const numericFields = getNumericFields();
+
+        // Function to update line chart with new X-axis
+        const updateLineChart = (chart, xField, yField) => {
+            const sortedData = [...rawData].sort((a, b) => a[xField] - b[xField]);
+            
+            chart.data.labels = sortedData.map(row => row[xField]);
+            chart.data.datasets[0].data = sortedData.map(row => row[yField]);
+            chart.options.scales.x.title.text = xField;
+            chart.options.scales.y.title.text = yField;
+            chart.update();
+        };
+
         // Render existing canvases for each column (line + histogram)
         Object.keys(chartData || {}).forEach(function(col) {
             const slug = colSlugMap[col] || (String(col).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''));
@@ -200,13 +244,14 @@
             const lineCtx = document.getElementById(lineCanvasId);
             if (lineCtx) {
                 try {
-                    new Chart(lineCtx, {
+                    // Create the chart
+                    const chart = new Chart(lineCtx, {
                         type: 'line',
                         data: {
-                            labels: chartData[col].map((_, i) => i + 1),
+                            labels: [],
                             datasets: [{
                                 label: col + ' Values',
-                                data: chartData[col],
+                                data: [],
                                 borderColor: '#0C4B8E',
                                 backgroundColor: 'rgba(12,75,142,0.1)',
                                 pointRadius: 2,
@@ -216,10 +261,46 @@
                         },
                         options: {
                             responsive: true,
-                            plugins: { legend: { display: true }, title: { display: true, text: col + ' Line Chart', color: '#0C4B8E' } },
-                            scales: { x: { title: { display: true, text: 'Index', color: '#0C4B8E' } }, y: { title: { display: true, text: 'Value', color: '#0C4B8E' } } }
+                            plugins: { 
+                                legend: { display: true }, 
+                                title: { display: true, text: col + ' Line Chart', color: '#0C4B8E' } 
+                            },
+                            scales: { 
+                                x: { 
+                                    title: { display: true, text: '', color: '#0C4B8E' } 
+                                }, 
+                                y: { 
+                                    title: { display: true, text: col, color: '#0C4B8E' } 
+                                } 
+                            }
                         }
                     });
+
+                    // Find the X-axis selector for this chart
+                    const selector = document.querySelector(`select[data-chart="${lineCanvasId}"]`);
+                    if (selector) {
+                        // Populate the selector with numeric fields
+                        numericFields.forEach(field => {
+                            if (field !== col) {  // Don't include the current field as X-axis option
+                                const option = document.createElement('option');
+                                option.value = field;
+                                option.textContent = field;
+                                selector.appendChild(option);
+                            }
+                        });
+
+                        // Add event listener for X-axis changes
+                        selector.addEventListener('change', (e) => {
+                            const xField = e.target.value;
+                            updateLineChart(chart, xField, col);
+                        });
+
+                        // Initial chart update with first numeric field
+                        if (numericFields.length > 0 && numericFields[0] !== col) {
+                            updateLineChart(chart, numericFields[0], col);
+                        }
+                    }
+
                 } catch (e) { console.error('Error rendering line chart for', col, e); }
             }
 
