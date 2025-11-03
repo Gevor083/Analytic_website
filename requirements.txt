@@ -1,9 +1,39 @@
+# Core Framework
 Django==5.2.6
-psycopg2-binary>=2.9
+
+# Database
+psycopg2-binary==2.9.11
+SQLAlchemy==2.0.43
+
+# Caching / Redis
+redis==7.0.1
+django-redis==6.0.0
+
+# Task Queue
 celery==5.5.3
-redis>=4.5
-django-redis>=6.0
-python-dotenv>=1.0
-pandas>=2.2
-numpy>=1.26
-gunicorn>=21.2
+
+# Environment Variables
+python-dotenv==1.1.1
+
+# Web Server
+gunicorn==23.0.0
+
+# Data & Analysis
+pandas==2.2.3
+numpy==2.2.1
+matplotlib==3.10.3
+seaborn==0.13.2
+scipy==1.15.3
+plotly==6.2.0
+tabulate==0.9.0
+pillow==11.2.1
+openpyxl==3.1.5
+
+# HTTP / Utils
+requests==2.32.4
+
+# Optional: keep this if you run Jupyter notebooks sometimes
+# jupyter==1.1.1
+# notebook==7.4.7
+
+# (remove comments "#" if you need them later)
