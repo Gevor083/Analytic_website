@@ -22,14 +22,186 @@ document.addEventListener('DOMContentLoaded', () => {
         return numericFields;
     };
 
-    // Setup modal chart selector
-    const setupChartModal = () => {
-        const xAxisSelect = document.getElementById('xAxisSelect');
-        const yAxisSelect = document.getElementById('yAxisSelect');
-        const modalChartContainer = document.getElementById('modalChartContainer');
-        const generateBtn = document.getElementById('generateChartBtn');
+    // Function to group data and calculate statistics
+    const groupAndCalculateStats = (data, xField, yField) => {
+        const groups = {};
         
-        if (!xAxisSelect || !yAxisSelect || !modalChartContainer || !generateBtn || !rawData) return;
+        // Group the data
+        data.forEach(row => {
+            const x = row[xField];
+            const y = parseFloat(row[yField]);
+            if (!groups[x]) {
+                groups[x] = [];
+            }
+            if (!isNaN(y)) {
+                groups[x].push(y);
+            }
+        });
+
+        // Calculate statistics for each group
+        return Object.entries(groups).map(([x, values]) => {
+            const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
+            const sorted = [...values].sort((a, b) => a - b);
+            const median = sorted.length % 2 === 0 
+                ? (sorted[sorted.length/2 - 1] + sorted[sorted.length/2]) / 2 
+                : sorted[Math.floor(sorted.length/2)];
+            const std = Math.sqrt(values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length);
+
+            return {
+                x: x,
+                y: mean,
+                stats: {
+                    mean,
+                    median,
+                    min: Math.min(...values),
+                    max: Math.max(...values),
+                    std,
+                    count: values.length
+                }
+            };
+        }).sort((a, b) => a.x - b.x);
+    };
+
+    // Setup modal chart selector
+    const initModalChart = (chartType, field) => {
+        const modal = document.getElementById('chartOptionsModal');
+        const nextBtn = modal.querySelector('#nextBtn');
+        const backBtn = modal.querySelector('#backBtn');
+        const generateBtn = modal.querySelector('#generateBtn');
+        const xAxisSelect = modal.querySelector('#xAxisSelect');
+        const yAxisSelect = modal.querySelector('#yAxisSelect');
+        const modalChartContainer = modal.querySelector('#modalChartContainer');
+        const rawData = window.uploadedData; // Get the data from the global variable
+
+        if (!modal || !nextBtn || !backBtn || !generateBtn || !xAxisSelect || !yAxisSelect || !modalChartContainer || !rawData) {
+            console.error('Required modal elements not found');
+            return;
+        }
+
+        // Step handling
+        const modalSteps = modal.querySelectorAll('.modal-step');
+        let currentStep = 1;
+
+        const showStep = (step) => {
+            modalSteps.forEach(el => el.classList.add('d-none'));
+            modal.querySelector(`[data-step="${step}"]`).classList.remove('d-none');
+            
+            backBtn.classList.toggle('d-none', step === 1);
+            nextBtn.classList.toggle('d-none', step === 2);
+            generateBtn.classList.toggle('d-none', step === 1);
+        };
+
+        // Get numeric fields
+        const numericFields = getNumericFields(rawData);
+        
+        // Initialize selectors
+        xAxisSelect.innerHTML = numericFields
+            .map(field => `<option value="${field}">${field}</option>`)
+            .join('');
+        yAxisSelect.innerHTML = numericFields
+            .map(field => `<option value="${field}">${field}</option>`)
+            .join('');
+
+        // Button event handlers
+        nextBtn.addEventListener('click', () => {
+            currentStep++;
+            showStep(currentStep);
+        });
+
+        backBtn.addEventListener('click', () => {
+            currentStep--;
+            showStep(currentStep);
+        });
+
+        // Chart generation
+        generateBtn.addEventListener('click', () => {
+            const xField = xAxisSelect.value;
+            const yField = yAxisSelect.value;
+            
+            if (!xField || !yField) {
+                alert('Please select both X and Y axis fields');
+                return;
+            }
+
+            // Create chart in the user area
+            const userChartsArea = document.getElementById('userChartsArea');
+            userChartsArea.innerHTML = '';
+            
+            const chartDiv = document.createElement('div');
+            chartDiv.className = 'card shadow-sm border-primary mb-4';
+            chartDiv.innerHTML = `
+                <div class="card-body">
+                    <h5 class="card-title text-primary fw-bold mb-3">
+                        <i class="fa fa-chart-line"></i> ${yField} Analysis by ${xField}
+                    </h5>
+                    <div class="chart-container"></div>
+                </div>
+            `;
+            userChartsArea.appendChild(chartDiv);
+
+            // Get grouped data
+            const chartData = groupAndCalculateStats(rawData, xField, yField);
+
+            // Create the chart
+            const canvas = document.createElement('canvas');
+            chartDiv.querySelector('.chart-container').appendChild(canvas);
+            
+            new Chart(canvas.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: chartData.map(item => item.x),
+                    datasets: [{
+                        label: yField,
+                        data: chartData.map(item => item.y),
+                        borderColor: '#0C4B8E',
+                        backgroundColor: 'rgba(12,75,142,0.1)',
+                        pointRadius: 3,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `${yField} Analysis by ${xField}`,
+                            font: { size: 14, weight: 'bold' },
+                            color: '#0C4B8E'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const stats = chartData[context.dataIndex].stats;
+                                    return [
+                                        `${yField} statistics (${stats.count} items):`,
+                                        `Mean: ${stats.mean.toFixed(2)}`,
+                                        `Median: ${stats.median.toFixed(2)}`,
+                                        `Min: ${stats.min.toFixed(2)}`,
+                                        `Max: ${stats.max.toFixed(2)}`,
+                                        `Std: ${stats.std.toFixed(2)}`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: xField, color: '#0C4B8E' },
+                            grid: { color: 'rgba(0,0,0,0.1)' }
+                        },
+                        y: {
+                            title: { display: true, text: yField, color: '#0C4B8E' },
+                            grid: { color: 'rgba(0,0,0,0.1)' }
+                        }
+                    }
+                }
+            });
+
+            // Hide modal
+            const bsModal = bootstrap.Modal.getInstance(modal);
+            if (bsModal) bsModal.hide();
+        });
 
         // Get numeric fields for selectors
         const numericFields = getNumericFields(rawData);
