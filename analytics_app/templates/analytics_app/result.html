@@ -79,6 +79,9 @@
         <div id="selectedStatsArea" class="row mt-4"></div>
 
         <div class="row">
+                        <div class="mb-3">
+                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#chartModal">Open chart builder</button>
+        </div>
                 {% for item in data %}
                         {% with analysis=analysis_data|get_item:item.column_name %}
                         <div class="col-md-6 mb-4">
@@ -112,9 +115,7 @@
                                                                 <span class="fw-bold">{{ analysis.stats.missing }}</span>
                                                         </li>
                                                 </ul>
-                                                <div class="mb-3">
-                                                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#chartModal">Open chart builder</button>
-                                                </div>
+                                                
                                         </div>
                                 </div>
                         </div>
