@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         selectorContainer.className = 'x-axis-selector mb-3';
         
         const label = document.createElement('label');
-        label.textContent = 'Select X-axis: ';
+        label.textContent = 'Group by:';
         label.className = 'me-2';
         
         const select = document.createElement('select');
