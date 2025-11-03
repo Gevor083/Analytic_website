@@ -46,140 +46,87 @@
                                         {% for item in data %}
                                             <option value="{{ item.column_name }}">{{ item.column_name }}</option>
                                         {% endfor %}
-                                    {% extends 'analytics_app/base.html' %}
-                                    {% load dict_extras %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="xAxisSelect" class="form-label">Select X-axis (Field to group by)</label>
+                                    <select class="form-select" id="xAxisSelect">
+                                        {% for item in data %}
+                                            <option value="{{ item.column_name }}">{{ item.column_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <p class="small text-muted">Step 2 of 2 — select fields for analysis and grouping.</p>
+                            </div>
 
-                                    {% block title %}Result{% endblock %}
+                            <div id="modalChartContainer" class="mb-3"></div>
 
-                                    {% block content %}
-                                    <section class="result-section container py-5 fade-in">
-                                            <h1 class="mb-4 text-primary fw-bold"><i class="fa fa-chart-bar"></i> Results</h1>
-                                            <p class="mb-4">Here you can see the results of your uploaded data.</p>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="modalBackBtn" class="btn btn-secondary d-none">Back</button>
+                        <button type="button" id="modalNextBtn" class="btn btn-primary">Next</button>
+                        <button type="button" id="generateChartBtn" class="btn btn-success d-none">Generate</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                                            <!-- Modal: Chart Selector -->
-                                            <div class="modal fade" id="chartModal" tabindex="-1" aria-labelledby="chartModalLabel" aria-hidden="true">
-                                                <div class="modal-dialog modal-dialog-centered modal-md">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <h5 class="modal-title" id="chartModalLabel">Create a chart</h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                        </div>
-                                                        <div class="modal-body">
-                                                            <form id="chartForm">
+        <!-- Area where user-generated charts will appear after modal generation -->
+        <div id="userChartsArea" class="mt-4"></div>
 
-                                                                <!-- Step 1: Choose chart type -->
-                                                                <div class="modal-step" data-step="1">
-                                                                    <div class="mb-3">
-                                                                        <label class="form-label">Chart type</label>
-                                                                        <div>
-                                                                            <div class="form-check form-check-inline">
-                                                                                <input class="form-check-input" type="radio" name="chartType" id="typeLine" value="line" checked>
-                                                                                <label class="form-check-label" for="typeLine">Line</label>
-                                                                            </div>
-                                                                            <div class="form-check form-check-inline">
-                                                                                <input class="form-check-input" type="radio" name="chartType" id="typeHist" value="histogram">
-                                                                                <label class="form-check-label" for="typeHist">Histogram</label>
-                                                                            </div>
-                                                                            <div class="form-check form-check-inline">
-                                                                                <input class="form-check-input" type="radio" name="chartType" id="typeBox" value="boxplot">
-                                                                                <label class="form-check-label" for="typeBox">Boxplot</label>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                    <p class="small text-muted">Step 1 of 2 — choose which type of graphic you want to create.</p>
-                                                                </div>
+        <!-- Area where selected arguments' stats will be shown -->
+        <div id="selectedStatsArea" class="row mt-4"></div>
 
-                                                                <!-- Step 2: Choose axes -->
-                                                                <div class="modal-step d-none" data-step="2">
-                                                                    <div class="mb-3">
-                                                                        <label for="yAxisSelect" class="form-label">Select Y-axis (Field to analyze)</label>
-                                                                        <select class="form-select" id="yAxisSelect">
-                                                                            {% for item in data %}
-                                                                                <option value="{{ item.column_name }}">{{ item.column_name }}</option>
-                                                                            {% endfor %}
-                                                                        </select>
-                                                                    </div>
-                                                                    <div class="mb-3">
-                                                                        <label for="xAxisSelect" class="form-label">Select X-axis (Field to group by)</label>
-                                                                        <select class="form-select" id="xAxisSelect">
-                                                                            {% for item in data %}
-                                                                                <option value="{{ item.column_name }}">{{ item.column_name }}</option>
-                                                                            {% endfor %}
-                                                                        </select>
-                                                                    </div>
-                                                                    <p class="small text-muted">Step 2 of 2 — select fields for analysis and grouping.</p>
-                                                                </div>
-
-                                                                <div id="modalChartContainer" class="mb-3"></div>
-
-                                                            </form>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" id="modalBackBtn" class="btn btn-secondary d-none">Back</button>
-                                                            <button type="button" id="modalNextBtn" class="btn btn-primary">Next</button>
-                                                            <button type="button" id="generateChartBtn" class="btn btn-success d-none">Generate</button>
-                                                        </div>
-                                                    </div>
+        <div class="row">
+                {% for item in data %}
+                        {% with analysis=analysis_data|get_item:item.column_name %}
+                        <div class="col-md-6 mb-4">
+                                <div class="card shadow-sm border-primary">
+                                        <div class="card-body">
+                                                <h5 class="card-title text-primary fw-bold mb-2"><i class="fa fa-table"></i> {{ item.column_name }}</h5>
+                                                <p class="card-text mb-3">Total: <span class="badge bg-primary fs-5">{{ item.value }}</span></p>
+                                                <ul class="list-group mb-3">
+                                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                                <span><i class="fa fa-calculator text-primary"></i> Mean</span>
+                                                                <span class="fw-bold">{{ analysis.stats.mean }}</span>
+                                                        </li>
+                                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                                <span><i class="fa fa-ruler-horizontal text-primary"></i> Median</span>
+                                                                <span class="fw-bold">{{ analysis.stats.median }}</span>
+                                                        </li>
+                                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                                <span><i class="fa fa-arrow-down text-primary"></i> Min</span>
+                                                                <span class="fw-bold">{{ analysis.stats.min }}</span>
+                                                        </li>
+                                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                                <span><i class="fa fa-arrow-up text-primary"></i> Max</span>
+                                                                <span class="fw-bold">{{ analysis.stats.max }}</span>
+                                                        </li>
+                                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                                <span><i class="fa fa-wave-square text-primary"></i> Std</span>
+                                                                <span class="fw-bold">{{ analysis.stats.std }}</span>
+                                                        </li>
+                                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                                <span><i class="fa fa-question-circle text-primary"></i> Missing</span>
+                                                                <span class="fw-bold">{{ analysis.stats.missing }}</span>
+                                                        </li>
+                                                </ul>
+                                                <div class="mb-3">
+                                                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#chartModal">Open chart builder</button>
                                                 </div>
-                                            </div>
-
-                                            <!-- Area where user-generated charts will appear after modal generation -->
-                                            <div id="userChartsArea" class="mt-4"></div>
-
-                                            <!-- Area where selected arguments' stats will be shown -->
-                                            <div id="selectedStatsArea" class="row mt-4"></div>
-
-                                            <div class="row">
-                                                    {% for item in data %}
-                                                            {% with analysis=analysis_data|get_item:item.column_name %}
-                                                            <div class="col-md-6 mb-4">
-                                                                    <div class="card shadow-sm border-primary">
-                                                                            <div class="card-body">
-                                                                                    <h5 class="card-title text-primary fw-bold mb-2"><i class="fa fa-table"></i> {{ item.column_name }}</h5>
-                                                                                    <p class="card-text mb-3">Total: <span class="badge bg-primary fs-5">{{ item.value }}</span></p>
-                                                                                    <ul class="list-group mb-3">
-                                                                                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                                                                    <span><i class="fa fa-calculator text-primary"></i> Mean</span>
-                                                                                                    <span class="fw-bold">{{ analysis.stats.mean }}</span>
-                                                                                            </li>
-                                                                                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                                                                    <span><i class="fa fa-ruler-horizontal text-primary"></i> Median</span>
-                                                                                                    <span class="fw-bold">{{ analysis.stats.median }}</span>
-                                                                                            </li>
-                                                                                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                                                                    <span><i class="fa fa-arrow-down text-primary"></i> Min</span>
-                                                                                                    <span class="fw-bold">{{ analysis.stats.min }}</span>
-                                                                                            </li>
-                                                                                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                                                                    <span><i class="fa fa-arrow-up text-primary"></i> Max</span>
-                                                                                                    <span class="fw-bold">{{ analysis.stats.max }}</span>
-                                                                                            </li>
-                                                                                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                                                                    <span><i class="fa fa-wave-square text-primary"></i> Std</span>
-                                                                                                    <span class="fw-bold">{{ analysis.stats.std }}</span>
-                                                                                            </li>
-                                                                                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                                                                    <span><i class="fa fa-question-circle text-primary"></i> Missing</span>
-                                                                                                    <span class="fw-bold">{{ analysis.stats.missing }}</span>
-                                                                                            </li>
-                                                                                    </ul>
-                                                                                    <div class="mb-3">
-                                                                                            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#chartModal">Open chart builder</button>
-                                                                                    </div>
-                                                                            </div>
-                                                                    </div>
-                                                            </div>
-                                                            {% endwith %}
-                                                    {% empty %}
-                                                            <div class="col-12">
-                                                                    <div class="alert alert-info d-flex align-items-center" role="alert">
-                                                                            <i class="fa fa-info-circle me-2"></i> No results found for this file.
-                                                                    </div>
-                                                            </div>
-                                                    {% endfor %}
-                                            </div>
-                                    </section>
-                                    {% endblock %}
+                                        </div>
+                                </div>
+                        </div>
+                        {% endwith %}
+                {% empty %}
+                        <div class="col-12">
+                                <div class="alert alert-info d-flex align-items-center" role="alert">
+                                        <i class="fa fa-info-circle me-2"></i> No results found for this file.
+                                </div>
+                        </div>
+                {% endfor %}
+        </div>
 
                                     {% block extra_js %}
                                     <!-- Boxplot plugin (used only when user selects boxplot) -->
