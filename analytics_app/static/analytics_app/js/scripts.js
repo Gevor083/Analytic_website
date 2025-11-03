@@ -3,101 +3,140 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Analytics website loaded');
 
-    // Initialize group analysis if data is available
-    const initGroupAnalysis = () => {
-        const groupBySelect = document.getElementById('groupByField');
-        const analyzeFieldsSelect = document.getElementById('analyzeFields');
-        const aggregationSelect = document.getElementById('aggregationType');
-        const chartsContainer = document.getElementById('groupAnalysisCharts');
+    // Function to check if a value is numeric
+    const isNumeric = (value) => {
+        return !isNaN(value) && value !== null && value !== '';
+    };
+
+    // Function to get numeric fields from data
+    const getNumericFields = (data) => {
+        if (!data || !data.length) return [];
+        const numericFields = [];
         
-        if (!groupBySelect || !analyzeFieldsSelect || !chartsContainer || !rawData || !rawData.length) {
-            return;
-        }
-
-        // Get numeric fields
-        const numericFields = getNumericColumns(rawData);
+        Object.keys(data[0]).forEach(field => {
+            if (data.slice(0, 10).every(row => isNumeric(row[field]))) {
+                numericFields.push(field);
+            }
+        });
         
-        // Populate group by select
-        numericFields.forEach(field => {
-            const option = document.createElement('option');
-            option.value = field;
-            option.textContent = field;
-            groupBySelect.appendChild(option);
-        });
+        return numericFields;
+    };
 
-        // Populate analyze fields select
-        numericFields.forEach(field => {
-            const option = document.createElement('option');
-            option.value = field;
-            option.textContent = field;
-            analyzeFieldsSelect.appendChild(option);
-        });
+    // Setup modal chart selector
+    const setupChartModal = () => {
+        const xAxisSelect = document.getElementById('xAxisSelect');
+        const yAxisSelect = document.getElementById('yAxisSelect');
+        const modalChartContainer = document.getElementById('modalChartContainer');
+        const generateBtn = document.getElementById('generateChartBtn');
+        
+        if (!xAxisSelect || !yAxisSelect || !modalChartContainer || !generateBtn || !rawData) return;
 
-        // Function to create/update charts based on selections
-        const updateGroupAnalysis = () => {
-            const xField = groupBySelect.value;
-            const selectedFields = Array.from(analyzeFieldsSelect.selectedOptions).map(opt => opt.value);
-            const aggregationType = aggregationSelect.value;
+        // Get numeric fields for selectors
+        const numericFields = getNumericFields(rawData);
 
-            chartsContainer.innerHTML = ''; // Clear existing charts
+        // Function to create a grouped chart
+        const createGroupedChart = (container, xField, yField) => {
+            // Group the data by xField
+            const groupedData = {};
+            rawData.forEach(row => {
+                const x = row[xField];
+                const y = parseFloat(row[yField]);
+                if (!groupedData[x]) {
+                    groupedData[x] = [];
+                }
+                if (!isNaN(y)) {
+                    groupedData[x].push(y);
+                }
+            });
 
-            selectedFields.forEach(field => {
-                const chartContainer = document.createElement('div');
-                chartContainer.className = 'mb-4';
-                chartContainer.innerHTML = `<h6 class="text-primary mb-2">${field} by ${xField}</h6>`;
+            // Calculate statistics for each group
+            const chartData = Object.entries(groupedData).map(([x, values]) => {
+                const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
+                const sorted = [...values].sort((a, b) => a - b);
+                const median = sorted.length % 2 === 0 
+                    ? (sorted[sorted.length/2 - 1] + sorted[sorted.length/2]) / 2 
+                    : sorted[Math.floor(sorted.length/2)];
+                const std = Math.sqrt(values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length);
 
-                const canvas = document.createElement('canvas');
-                chartContainer.appendChild(canvas);
-                chartsContainer.appendChild(chartContainer);
+                return {
+                    x: x,
+                    y: mean,
+                    stats: {
+                        mean,
+                        median,
+                        min: Math.min(...values),
+                        max: Math.max(...values),
+                        std,
+                        count: values.length
+                    }
+                };
+            }).sort((a, b) => a.x - b.x);
 
-                const ctx = canvas.getContext('2d');
-                const aggregatedData = groupAndAggregate(rawData, xField, field, aggregationType);
-
-                new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: aggregatedData.map(item => item.x),
-                        datasets: [{
-                            label: field,
-                            data: aggregatedData.map(item => item.y),
-                            borderColor: '#0C4B8E',
-                            backgroundColor: 'rgba(12,75,142,0.1)',
-                            pointRadius: 2,
-                            fill: true,
-                            tension: 0.3
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            title: {
-                                display: true,
-                                text: `${field} by ${xField} (${aggregationType})`,
-                                color: '#0C4B8E'
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const dataPoint = aggregatedData[context.dataIndex];
-                                        return `${field}: ${context.formattedValue} (${dataPoint.count} items)`;
-                                    }
+            // Create the chart
+            const canvas = document.createElement('canvas');
+            container.innerHTML = ''; // Clear previous content
+            container.appendChild(canvas);
+            
+            const ctx = canvas.getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartData.map(item => item.x),
+                    datasets: [{
+                        label: yField,
+                        data: chartData.map(item => item.y),
+                        borderColor: '#0C4B8E',
+                        backgroundColor: 'rgba(12,75,142,0.1)',
+                        pointRadius: 3,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `${yField} Analysis by ${xField}`,
+                            font: { size: 14, weight: 'bold' },
+                            color: '#0C4B8E'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const stats = chartData[context.dataIndex].stats;
+                                    return [
+                                        `${yField} statistics (${stats.count} items):`,
+                                        `Mean: ${stats.mean.toFixed(2)}`,
+                                        `Median: ${stats.median.toFixed(2)}`,
+                                        `Min: ${stats.min.toFixed(2)}`,
+                                        `Max: ${stats.max.toFixed(2)}`,
+                                        `Std: ${stats.std.toFixed(2)}`
+                                    ];
                                 }
                             }
-                        },
-                        scales: {
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: xField,
-                                    color: '#0C4B8E'
-                                }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: xField,
+                                color: '#0C4B8E'
                             },
-                            y: {
-                                title: {
-                                    display: true,
-                                    text: field,
-                                    color: '#0C4B8E'
-                                }
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: yField,
+                                color: '#0C4B8E'
+                            },
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
                             }
                         }
                     }
