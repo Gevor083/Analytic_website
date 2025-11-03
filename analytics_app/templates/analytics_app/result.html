@@ -155,7 +155,24 @@
                                                             else { modalBackBtn?.classList.remove('d-none'); modalNextBtn?.classList.add('d-none'); generateChartBtn?.classList.remove('d-none'); }
                                                     }
 
-                                                    modalNextBtn?.addEventListener('click', ()=> showStep(2));
+                                                    modalNextBtn?.addEventListener('click', ()=>{
+                                                            showStep(2);
+                                                            // Populate selects when showing step 2
+                                                            if(xAxisSelect && yAxisSelect && numericFields.length > 0){
+                                                                    xAxisSelect.innerHTML = '';
+                                                                    yAxisSelect.innerHTML = '';
+                                                                    numericFields.forEach(field => {
+                                                                            const optX = document.createElement('option');
+                                                                            optX.value = field;
+                                                                            optX.textContent = field;
+                                                                            xAxisSelect.appendChild(optX);
+                                                                            const optY = document.createElement('option');
+                                                                            optY.value = field;
+                                                                            optY.textContent = field;
+                                                                            yAxisSelect.appendChild(optY);
+                                                                    });
+                                                            }
+                                                    });
                                                     modalBackBtn?.addEventListener('click', ()=> showStep(1));
 
                                                     function cleanupModalState(){ try{ document.querySelectorAll('.modal-backdrop').forEach(b=>b.remove()); document.body.classList.remove('modal-open'); }catch(e){} }
