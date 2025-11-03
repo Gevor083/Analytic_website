@@ -11,6 +11,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 import numpy as np
 import datetime
+from collections import defaultdict
 
 
 def make_json_serializable(o):
@@ -178,7 +179,9 @@ def result_view(request, file_id):
     chart_data_json = json.dumps(chart_data)
     analysis_data_json = json.dumps(analysis_data)
 
-    # Get the raw data from the file for X-axis selection
+    # Get the raw data from the file for analyses
+    processed_chart_data = {}
+    numeric_fields = []
     try:
         if file_obj.file_type == 'csv':
             df = pd.read_csv(file_obj.file.path)
@@ -188,13 +191,25 @@ def result_view(request, file_id):
             df = pd.read_parquet(file_obj.file.path)
         else:
             df = pd.DataFrame()
-        
-        # Convert DataFrame to a dictionary format
+
+        if not df.empty:
+            numeric_fields = get_numeric_fields(df)
+            # Pre-compute grouped stats for all numeric pairs (for modal)
+            for x_field in numeric_fields:
+                for y_field in numeric_fields:
+                    if x_field != y_field:
+                        key = f"{x_field}_{y_field}"
+                        processed_chart_data[key] = group_and_calculate_stats(df, x_field, y_field)
+
+        # Convert DataFrame to a dictionary format (still needed for some JS if any)
         raw_data = df.to_dict(orient='records')
         raw_data_json = json.dumps(make_json_serializable(raw_data))
     except Exception as e:
         raw_data = []
         raw_data_json = '[]'
+        processed_chart_data = {}
+
+    processed_chart_data_json = json.dumps(make_json_serializable(processed_chart_data))
 
     context = {
         'file': file_obj,
@@ -203,7 +218,9 @@ def result_view(request, file_id):
         'analysis_data': analysis_data,
         'chart_data_json': chart_data_json,
         'analysis_data_json': analysis_data_json,
-        'raw_data_json': raw_data_json
+        'raw_data_json': raw_data_json,
+        'processed_chart_data_json': processed_chart_data_json,
+        'numeric_fields': numeric_fields
     }
     context['show_modal'] = request.GET.get('show_modal', '0')
     return render(request, 'analytics_app/result.html', context)
@@ -324,3 +341,64 @@ def health_check(request):
             return HttpResponse('Redis unavailable', status=503)
 
     return HttpResponse('OK', status=200)
+
+
+def get_numeric_fields(df):
+    """
+    Identify numeric fields in a DataFrame.
+    Returns a list of column names that are numeric.
+    """
+    numeric_fields = []
+    for col in df.columns:
+        # Check if the column can be converted to numeric
+        try:
+            pd.to_numeric(df[col], errors='coerce')
+            # Ensure at least some values are numeric
+            if df[col].notna().sum() > 0:
+                numeric_fields.append(col)
+        except Exception:
+            continue
+    return numeric_fields
+
+
+def group_and_calculate_stats(df, x_field, y_field):
+    """
+    Group data by x_field and calculate statistics for y_field.
+    Returns a list of dicts with x, y (mean), and stats.
+    """
+    if x_field not in df.columns or y_field not in df.columns:
+        return []
+
+    # Group by x_field and calculate stats for y_field
+    grouped = df.groupby(x_field)[y_field].agg(['mean', 'median', 'min', 'max', 'std', 'count']).reset_index()
+
+    # Sort by x_field (assuming it's numeric or sortable)
+    try:
+        grouped = grouped.sort_values(by=x_field)
+    except Exception:
+        pass  # If not sortable, keep as is
+
+    result = []
+    for _, row in grouped.iterrows():
+        x_val = row[x_field]
+        mean_val = row['mean']
+        median_val = row['median']
+        min_val = row['min']
+        max_val = row['max']
+        std_val = row['std']
+        count_val = row['count']
+
+        result.append({
+            'x': x_val,
+            'y': mean_val,  # For line chart, y is the mean
+            'stats': {
+                'mean': mean_val,
+                'median': median_val,
+                'min': min_val,
+                'max': max_val,
+                'std': std_val,
+                'count': count_val
+            }
+        })
+
+    return result

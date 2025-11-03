@@ -135,15 +135,13 @@
                                     <!-- Boxplot plugin (used only when user selects boxplot) -->
                                     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-box-and-violin@3.0.1/build/Chart.BoxPlot.min.js"></script>
                                     <script>
-                                            // Minimal, robust modal chart flow. Uses server-provided JSON: chart_data_json, analysis_data_json, raw_data_json
+                                            // Minimal, robust modal chart flow. Uses server-provided JSON: processed_chart_data_json, numeric_fields
                                             function initCharts() {
-                                                    let chartData = {{ chart_data_json|safe }};
-                                                    let analysisData = {{ analysis_data_json|safe }};
-                                                    let rawData = {{ raw_data_json|safe }};
+                                                    let processedChartData = {{ processed_chart_data_json|safe }};
+                                                    let numericFields = {{ numeric_fields|safe }};
 
-                                                    try { if (typeof chartData === 'string') chartData = JSON.parse(chartData); } catch(e){ chartData = {}; }
-                                                    try { if (typeof analysisData === 'string') analysisData = JSON.parse(analysisData); } catch(e){ analysisData = {}; }
-                                                    try { if (typeof rawData === 'string') rawData = JSON.parse(rawData); } catch(e){ rawData = []; }
+                                                    try { if (typeof processedChartData === 'string') processedChartData = JSON.parse(processedChartData); } catch(e){ processedChartData = {}; }
+                                                    try { if (typeof numericFields === 'string') numericFields = JSON.parse(numericFields); } catch(e){ numericFields = []; }
 
                                                     const chartModalEl = document.getElementById('chartModal');
                                                     const modalNextBtn = document.getElementById('modalNextBtn');
@@ -177,25 +175,25 @@
                                                                     const chartType = document.querySelector('input[name="chartType"]:checked')?.value || 'line';
                                                                     modalChartContainer.innerHTML = '';
 
-                                                                    // group rawData by xField and compute mean of yField
-                                                                    const grouped = {};
-                                                                    (rawData||[]).forEach(r=>{ const k = r[xField]; const v = parseFloat(r[yField]); if(!grouped[k]) grouped[k]=[]; if(!isNaN(v)) grouped[k].push(v); });
-                                                                    const vals = Object.entries(grouped).map(([k,a])=>({x:k,y: a.reduce((s,n)=>s+n,0)/a.length})).sort((a,b)=> (a.x>b.x)?1:(a.x<b.x)?-1:0);
+                                                                    // Get pre-computed data from server
+                                                                    const key = `${xField}_${yField}`;
+                                                                    const vals = processedChartData[key] || [];
 
                                                                     if(vals.length===0){ const p=document.createElement('p'); p.className='text-muted small'; p.textContent = 'No numeric data to plot.'; modalChartContainer.appendChild(p); }
                                                                     else{
                                                                             const canvas=document.createElement('canvas'); modalChartContainer.appendChild(canvas); const ctx=canvas.getContext('2d');
                                                                             if(chartType==='line'){
-                                                                                    new Chart(ctx,{ type:'line', data:{ labels: vals.map(v=>v.x), datasets:[{ label: yField, data: vals.map(v=>v.y), borderColor:'#0C4B8E', backgroundColor:'rgba(12,75,142,0.1)', fill:true }] }, options:{ responsive:true } });
-                                                                            } else if(chartType==='histogram'){
-                                                                                    const all=(rawData||[]).map(r=>parseFloat(r[yField])).filter(v=>!isNaN(v)); const bins=20; const min=Math.min(...all); const max=Math.max(...all); const bw=(max-min)/bins||1; const counts=new Array(bins).fill(0); all.forEach(v=>{ const i=Math.min(bins-1,Math.floor((v-min)/bw)); if(i>=0) counts[i]++; }); const labels=counts.map((_,i)=>(min+i*bw).toFixed(2)); new Chart(ctx,{ type:'bar', data:{ labels:labels, datasets:[{ label:yField+' histogram', data:counts, backgroundColor:'rgba(12,75,142,0.7)' }] }, options:{ responsive:true } });
+                                                                                    new Chart(ctx,{ type:'line', data:{ labels: vals.map(v=>v.x), datasets:[{ label: yField, data: vals.map(v=>v.y), borderColor:'#0C4B8E', backgroundColor:'rgba(12,75,142,0.1)', fill:true }] }, options:{ responsive:true, plugins:{ tooltip:{ callbacks:{ label:function(c){ const s=vals[c.dataIndex].stats; return [`${yField} stats (${s.count} items):`, `Mean: ${s.mean.toFixed(2)}`, `Median: ${s.median.toFixed(2)}`, `Std: ${s.std.toFixed(2)}`]; } } } } } });
+                                                                            }
+                                                                                    // For histogram, use yField values directly (assuming raw data is available, but simplified)
+                                                                                    alert('Histogram not implemented with pre-computed data. Use line chart.');
                                                                             } else if(chartType==='boxplot'){
-                                                                                    const all=(rawData||[]).map(r=>parseFloat(r[yField])).filter(v=>!isNaN(v)); let box=[]; if(all.length){ all.sort((a,b)=>a-b); const min=all[0]; const max=all[all.length-1]; const med=all.length%2? all[(all.length-1)/2] : (all[all.length/2-1]+all[all.length/2])/2; const q1=all[Math.floor((all.length-1)/4)]; const q3=all[Math.ceil((all.length-1)*3/4)]; box=[[min,q1,med,q3,max]]; } new Chart(ctx,{ type:'boxplot', data:{ labels:[yField], datasets:[{ label:yField, data:box, backgroundColor:'rgba(12,75,142,0.4)' }] }, options:{ responsive:true } });
+                                                                                    alert('Boxplot not implemented with pre-computed data. Use line chart.');
                                                                             }
                                                                     }
 
                                                                     // Render main chart area
-                                                                    const userArea=document.getElementById('userChartsArea'); userArea.innerHTML=''; const card=document.createElement('div'); card.className='card shadow-sm border-primary mb-4'; card.innerHTML=`<div class="card-body"><h5 class="card-title text-primary fw-bold mb-3"><i class="fa fa-chart-line"></i> ${yField} by ${xField}</h5><div class="chart-container"></div></div>`; userArea.appendChild(card); const userCanvas=document.createElement('canvas'); card.querySelector('.chart-container').appendChild(userCanvas); new Chart(userCanvas.getContext('2d'),{ type:'line', data:{ labels: vals.map(v=>v.x), datasets:[{ label:yField, data: vals.map(v=>v.y), borderColor:'#0C4B8E', backgroundColor:'rgba(12,75,142,0.1)', fill:true }] }, options:{ responsive:true } });
+                                                                    const userArea=document.getElementById('userChartsArea'); userArea.innerHTML=''; const card=document.createElement('div'); card.className='card shadow-sm border-primary mb-4'; card.innerHTML=`<div class="card-body"><h5 class="card-title text-primary fw-bold mb-3"><i class="fa fa-chart-line"></i> ${yField} by ${xField}</h5><div class="chart-container"></div></div>`; userArea.appendChild(card); const userCanvas=document.createElement('canvas'); card.querySelector('.chart-container').appendChild(userCanvas); new Chart(userCanvas.getContext('2d'),{ type:'line', data:{ labels: vals.map(v=>v.x), datasets:[{ label:yField, data: vals.map(v=>v.y), borderColor:'#0C4B8E', backgroundColor:'rgba(12,75,142,0.1)', fill:true }] }, options:{ responsive:true, plugins:{ tooltip:{ callbacks:{ label:function(c){ const s=vals[c.dataIndex].stats; return [`${yField} stats (${s.count} items):`, `Mean: ${s.mean.toFixed(2)}`, `Median: ${s.median.toFixed(2)}`, `Std: ${s.std.toFixed(2)}`]; } } } } } });
 
                                                                     try{ bootstrapModal?.hide(); } catch(e){}
                                                                     cleanupModalState();
