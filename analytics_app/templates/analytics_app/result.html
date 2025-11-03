@@ -298,41 +298,42 @@
                             responsive: true,
                             plugins: { 
                                 legend: { display: true }, 
-                                title: { display: true, text: col + ' Line Chart', color: '#0C4B8E' } 
+                                title: { 
+                                    display: true, 
+                                    text: col + ' Analysis', 
+                                    color: '#0C4B8E',
+                                    font: { size: 14, weight: 'bold' }
+                                },
+                                tooltip: {
+                                    backgroundColor: 'rgba(12,75,142,0.9)',
+                                    titleFont: { size: 12 },
+                                    bodyFont: { size: 11 },
+                                    padding: 10,
+                                    boxPadding: 5
+                                }
                             },
                             scales: { 
                                 x: { 
-                                    title: { display: true, text: '', color: '#0C4B8E' } 
+                                    title: { display: true, text: '', color: '#0C4B8E' },
+                                    grid: { color: 'rgba(0,0,0,0.1)' }
                                 }, 
                                 y: { 
-                                    title: { display: true, text: col, color: '#0C4B8E' } 
+                                    title: { display: true, text: col, color: '#0C4B8E' },
+                                    grid: { color: 'rgba(0,0,0,0.1)' }
                                 } 
                             }
                         }
                     });
 
-                    // Find the X-axis selector for this chart
-                    const selector = document.querySelector(`select[data-chart="${lineCanvasId}"]`);
-                    if (selector) {
-                        // Populate the selector with numeric fields
-                        numericFields.forEach(field => {
-                            if (field !== col) {  // Don't include the current field as X-axis option
-                                const option = document.createElement('option');
-                                option.value = field;
-                                option.textContent = field;
-                                selector.appendChild(option);
-                            }
-                        });
-
-                        // Add event listener for X-axis changes
-                        selector.addEventListener('change', (e) => {
-                            const xField = e.target.value;
-                            updateLineChart(chart, xField, col);
-                        });
-
-                        // Initial chart update with first numeric field
-                        if (numericFields.length > 0 && numericFields[0] !== col) {
-                            updateLineChart(chart, numericFields[0], col);
+                    // Create and setup X-axis selector
+                    createXAxisSelector(lineCtx.parentElement, rawData, col, chart);
+                    
+                    // Initialize the chart with the first available numeric field
+                    const numericColumns = getNumericColumns(rawData);
+                    if (numericColumns.length > 0) {
+                        const firstXField = numericColumns.find(field => field !== col) || numericColumns[0];
+                        if (firstXField) {
+                            updateLineChart(chart, rawData, firstXField, col);
                         }
                     }
 

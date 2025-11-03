@@ -136,8 +136,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return Array.from(numericColumns);
     };
 
-    // Function to group and aggregate data
-    const groupAndAggregate = (data, xField, yField, aggregationType = 'avg') => {
+    // Function to calculate grouped statistics
+    const calculateGroupedStats = (data, xField, yField) => {
         const groups = {};
         
         // Group the data
@@ -154,145 +154,92 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Calculate aggregates for each group
-        const aggregated = Object.entries(groups).map(([x, values]) => {
-            let aggregatedValue;
-            switch (aggregationType) {
-                case 'avg':
-                    aggregatedValue = values.reduce((sum, val) => sum + val, 0) / values.length;
-                    break;
-                case 'sum':
-                    aggregatedValue = values.reduce((sum, val) => sum + val, 0);
-                    break;
-                case 'min':
-                    aggregatedValue = Math.min(...values);
-                    break;
-                case 'max':
-                    aggregatedValue = Math.max(...values);
-                    break;
-                case 'count':
-                    aggregatedValue = values.length;
-                    break;
-                default:
-                    aggregatedValue = values.reduce((sum, val) => sum + val, 0) / values.length;
-            }
-            return { x: parseFloat(x), y: aggregatedValue, count: values.length };
+        // Calculate statistics for each group
+        const groupedStats = Object.entries(groups).map(([x, values]) => {
+            const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
+            const sorted = [...values].sort((a, b) => a - b);
+            const median = sorted.length % 2 === 0 
+                ? (sorted[sorted.length/2 - 1] + sorted[sorted.length/2]) / 2 
+                : sorted[Math.floor(sorted.length/2)];
+            const std = Math.sqrt(values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length);
+            
+            return {
+                x: parseFloat(x),
+                y: mean, // We'll show the mean value in the line chart
+                count: values.length,
+                stats: {
+                    mean: mean,
+                    median: median,
+                    min: Math.min(...values),
+                    max: Math.max(...values),
+                    std: std
+                }
+            };
         });
 
         // Sort by x value
-        return aggregated.sort((a, b) => a.x - b.x);
+        return groupedStats.sort((a, b) => a.x - b.x);
     };
 
-    // Function to create X-axis selector and aggregation controls for a chart
+    // Function to create X-axis selector for a chart
     const createXAxisSelector = (chartContainer, data, currentField, chart) => {
         const numericColumns = getNumericColumns(data);
         
-        const controlsContainer = document.createElement('div');
-        controlsContainer.className = 'chart-controls mb-3';
+        // Get the existing selector that was created in the template
+        const select = chartContainer.querySelector('select[data-chart]');
+        if (!select) return;
         
-        // Create group by selector
-        const groupByContainer = document.createElement('div');
-        groupByContainer.className = 'd-inline-block me-3';
-        
-        const groupByLabel = document.createElement('label');
-        groupByLabel.textContent = 'Group by:';
-        groupByLabel.className = 'me-2';
-        
-        const groupBySelect = document.createElement('select');
-        groupBySelect.className = 'form-select form-select-sm d-inline-block w-auto me-3';
-        
+        // Populate the select with numeric fields
         numericColumns.forEach(column => {
-            if (column !== currentField) {
+            if (column !== currentField) {  // Don't include the current field
                 const option = document.createElement('option');
                 option.value = column;
                 option.textContent = column;
-                groupBySelect.appendChild(option);
+                select.appendChild(option);
             }
         });
-
-        // Create aggregation type selector
-        const aggregationContainer = document.createElement('div');
-        aggregationContainer.className = 'd-inline-block';
         
-        const aggregationLabel = document.createElement('label');
-        aggregationLabel.textContent = 'Aggregate by:';
-        aggregationLabel.className = 'me-2';
-        
-        const aggregationSelect = document.createElement('select');
-        aggregationSelect.className = 'form-select form-select-sm d-inline-block w-auto';
-        
-        const aggregationTypes = [
-            { value: 'avg', label: 'Average' },
-            { value: 'sum', label: 'Sum' },
-            { value: 'min', label: 'Minimum' },
-            { value: 'max', label: 'Maximum' },
-            { value: 'count', label: 'Count' }
-        ];
-
-        aggregationTypes.forEach(type => {
-            const option = document.createElement('option');
-            option.value = type.value;
-            option.textContent = type.label;
-            aggregationSelect.appendChild(option);
+        // Add event listener
+        select.addEventListener('change', (e) => {
+            const xField = e.target.value;
+            updateLineChart(chart, data, xField, currentField);
         });
-
-        // Add event listeners
-        const updateChart = () => {
-            const xField = groupBySelect.value;
-            const aggregationType = aggregationSelect.value;
-            updateLineChart(chart, data, xField, currentField, aggregationType);
-        };
-
-        groupBySelect.addEventListener('change', updateChart);
-        aggregationSelect.addEventListener('change', updateChart);
         
-        // Assemble the controls
-        groupByContainer.appendChild(groupByLabel);
-        groupByContainer.appendChild(groupBySelect);
-        aggregationContainer.appendChild(aggregationLabel);
-        aggregationContainer.appendChild(aggregationSelect);
-        
-        controlsContainer.appendChild(groupByContainer);
-        controlsContainer.appendChild(aggregationContainer);
-        
-        chartContainer.insertBefore(controlsContainer, chart.canvas);
-        
-        // Initial chart update
+        // Initial chart update with first numeric column
         if (numericColumns.length > 0) {
-            updateLineChart(chart, data, numericColumns[0], currentField, 'avg');
+            updateLineChart(chart, data, numericColumns[0], currentField);
         }
     };
 
-    // Function to update line chart with new X-axis and aggregation
-    const updateLineChart = (chart, data, xField, yField, aggregationType) => {
-        const aggregatedData = groupAndAggregate(data, xField, yField, aggregationType);
+    // Function to update line chart with new X-axis
+    const updateLineChart = (chart, data, xField, yField) => {
+        const groupedStats = calculateGroupedStats(data, xField, yField);
         
-        chart.data.labels = aggregatedData.map(item => item.x);
-        chart.data.datasets[0].data = aggregatedData.map(item => item.y);
+        chart.data.labels = groupedStats.map(item => item.x);
+        chart.data.datasets[0].data = groupedStats.map(item => item.y);
         
-        // Update tooltips to show count of items in each group
+        // Update tooltips to show detailed stats for each group
         chart.options.plugins.tooltip = {
             callbacks: {
                 label: function(context) {
-                    const dataPoint = aggregatedData[context.dataIndex];
-                    const value = context.formattedValue;
-                    return `${yField}: ${value} (${dataPoint.count} items)`;
+                    const stats = groupedStats[context.dataIndex].stats;
+                    const count = groupedStats[context.dataIndex].count;
+                    return [
+                        `${yField} statistics for ${xField}=${context.label} (${count} items):`,
+                        `Mean: ${stats.mean.toFixed(2)}`,
+                        `Median: ${stats.median.toFixed(2)}`,
+                        `Min: ${stats.min.toFixed(2)}`,
+                        `Max: ${stats.max.toFixed(2)}`,
+                        `Std: ${stats.std.toFixed(2)}`
+                    ];
                 }
             }
         };
         
         // Update chart title and axis labels
-        const aggTypeLabel = {
-            'avg': 'Average',
-            'sum': 'Sum',
-            'min': 'Minimum',
-            'max': 'Maximum',
-            'count': 'Count'
-        }[aggregationType] || 'Average';
-
-        chart.options.plugins.title.text = `${yField} by ${xField} (${aggTypeLabel})`;
+        chart.options.plugins.title.text = `${yField} Analysis by ${xField}`;
         chart.options.scales.x.title.text = xField;
-        chart.options.scales.y.title.text = `${aggTypeLabel} of ${yField}`;
+        chart.options.scales.y.title.text = yField;
         
         chart.update();
     };
