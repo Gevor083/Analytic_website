@@ -353,9 +353,9 @@ def get_numeric_fields(df):
     for col in df.columns:
         # Check if the column can be converted to numeric
         try:
-            pd.to_numeric(df[col], errors='coerce')
-            # Ensure at least some values are numeric
-            if df[col].notna().sum() > 0:
+            numeric_series = pd.to_numeric(df[col], errors='coerce')
+            # Ensure at least some values are numeric and not all NaN
+            if numeric_series.notna().sum() > 0:
                 numeric_fields.append(col)
         except Exception:
             continue
