@@ -43,17 +43,11 @@
                                 <div class="mb-3">
                                     <label for="yAxisSelect" class="form-label">Select Y-axis (Field to analyze)</label>
                                     <select class="form-select" id="yAxisSelect">
-                                        {% for field in numeric_fields %}
-                                            <option value="{{ field }}">{{ field }}</option>
-                                        {% endfor %}
                                     </select>
                                 </div>
                                 <div class="mb-3">
                                     <label for="xAxisSelect" class="form-label">Select X-axis (Field to group by)</label>
                                     <select class="form-select" id="xAxisSelect">
-                                        {% for field in numeric_fields %}
-                                            <option value="{{ field }}">{{ field }}</option>
-                                        {% endfor %}
                                     </select>
                                 </div>
                                 <p class="small text-muted">Step 2 of 2 — select fields for analysis and grouping.</p>
