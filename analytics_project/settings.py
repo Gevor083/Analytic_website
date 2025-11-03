@@ -126,7 +126,7 @@ USE_TZ = True
 
 # File Upload Settings
 MAX_UPLOAD_SIZE = 30 * 1024 * 1024  # 30MB
-ALLOWED_FILE_TYPES = ['csv', 'json', 'sql']
+ALLOWED_FILE_TYPES = ['csv', 'json']
 # Cache and Celery settings
 # Use Redis when explicitly enabled (production or when developer enabled it).
 USE_REDIS = os.getenv('USE_REDIS', 'False').lower() == 'true'
