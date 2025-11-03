@@ -135,10 +135,10 @@
                                     <!-- Boxplot plugin (used only when user selects boxplot) -->
                                     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-box-and-violin@3.0.1/build/Chart.BoxPlot.min.js"></script>
                                     <script>
-                                            // Minimal, robust modal chart flow. Uses server-provided JSON: processed_chart_data_json, numeric_fields
+                                            // Minimal, robust modal chart flow. Uses server-provided JSON: processed_chart_data_json, numeric_fields_json
                                             function initCharts() {
                                                     let processedChartData = {{ processed_chart_data_json|safe }};
-                                                    let numericFields = {{ numeric_fields|safe }};
+                                                    let numericFields = {{ numeric_fields_json|safe }};
 
                                                     try { if (typeof processedChartData === 'string') processedChartData = JSON.parse(processedChartData); } catch(e){ processedChartData = {}; }
                                                     try { if (typeof numericFields === 'string') numericFields = JSON.parse(numericFields); } catch(e){ numericFields = []; }

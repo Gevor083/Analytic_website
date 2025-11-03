@@ -210,6 +210,7 @@ def result_view(request, file_id):
         processed_chart_data = {}
 
     processed_chart_data_json = json.dumps(make_json_serializable(processed_chart_data))
+    numeric_fields_json = json.dumps(numeric_fields)
 
     context = {
         'file': file_obj,
@@ -220,7 +221,7 @@ def result_view(request, file_id):
         'analysis_data_json': analysis_data_json,
         'raw_data_json': raw_data_json,
         'processed_chart_data_json': processed_chart_data_json,
-        'numeric_fields': numeric_fields
+        'numeric_fields_json': numeric_fields_json
     }
     context['show_modal'] = request.GET.get('show_modal', '0')
     return render(request, 'analytics_app/result.html', context)
