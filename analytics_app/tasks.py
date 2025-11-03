@@ -107,42 +107,42 @@ def process_uploaded_file(file_id):
                     except Exception:
                         stats['values'].extend(non_null.tolist()[: max(0, 1000 - len(stats['values']))])
 
-                # Calculate final statistics and save
-                for column, stats in column_stats.items():
-                    if stats['count'] > 0:
-                        mean = stats['sum'] / stats['count']
-                        variance = (stats['sum_sq'] / stats['count']) - (mean ** 2)
-                        std = np.sqrt(variance) if variance > 0 else 0
+        # Calculate final statistics and save
+        for column, stats in column_stats.items():
+            if stats['count'] > 0:
+                mean = stats['sum'] / stats['count']
+                variance = (stats['sum_sq'] / stats['count']) - (mean ** 2)
+                std = np.sqrt(variance) if variance > 0 else 0
 
-                        # Calculate median from sample values
-                        median = np.median(stats['values']) if len(stats['values']) > 0 else 0
+                # Calculate median from sample values
+                median = np.median(stats['values']) if len(stats['values']) > 0 else 0
 
-                        # Calculate histogram only if we have sample values
-                        if len(stats['values']) > 0:
-                            hist, bins = np.histogram(stats['values'], bins=10)
-                            hist_data = {
-                                'bins': bins.tolist(),
-                                'counts': hist.tolist()
-                            }
-                        else:
-                            hist_data = {'bins': [], 'counts': []}
+                # Calculate histogram only if we have sample values
+                if len(stats['values']) > 0:
+                    hist, bins = np.histogram(stats['values'], bins=10)
+                    hist_data = {
+                        'bins': bins.tolist(),
+                        'counts': hist.tolist()
+                    }
+                else:
+                    hist_data = {'bins': [], 'counts': []}
 
-                        # Sanitize numeric types to native Python types before saving
-                        sanitized_stats = {
-                            'mean': float(mean),
-                            'median': float(median),
-                            'std': float(std),
-                            'min': float(stats['min']),
-                            'max': float(stats['max']),
-                            'count': int(stats['count']),
-                            'missing': int(stats['missing']),
-                            'histogram': {
-                                'bins': [float(b) for b in hist_data.get('bins', [])],
-                                'counts': [int(h) for h in hist_data.get('counts', [])]
-                            },
-                            # Include a limited sample of numeric values for line/box charts
-                            'sample_values': [float(v) for v in (stats.get('values') or [])[:1000]]
-                        }
+                # Sanitize numeric types to native Python types before saving
+                sanitized_stats = {
+                    'mean': float(mean),
+                    'median': float(median),
+                    'std': float(std),
+                    'min': float(stats['min']),
+                    'max': float(stats['max']),
+                    'count': int(stats['count']),
+                    'missing': int(stats['missing']),
+                    'histogram': {
+                        'bins': [float(b) for b in hist_data.get('bins', [])],
+                        'counts': [int(h) for h in hist_data.get('counts', [])]
+                    },
+                    # Include a limited sample of numeric values for line/box charts
+                    'sample_values': [float(v) for v in (stats.get('values') or [])[:1000]]
+                }
 
                 # Use update_or_create to avoid unique_together integrity errors on reruns
                 ProcessedData.objects.update_or_create(
