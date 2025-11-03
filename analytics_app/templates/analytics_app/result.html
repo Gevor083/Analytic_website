@@ -43,16 +43,16 @@
                                 <div class="mb-3">
                                     <label for="yAxisSelect" class="form-label">Select Y-axis (Field to analyze)</label>
                                     <select class="form-select" id="yAxisSelect">
-                                        {% for item in data %}
-                                            <option value="{{ item.column_name }}">{{ item.column_name }}</option>
+                                        {% for field in numeric_fields %}
+                                            <option value="{{ field }}">{{ field }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
                                 <div class="mb-3">
                                     <label for="xAxisSelect" class="form-label">Select X-axis (Field to group by)</label>
                                     <select class="form-select" id="xAxisSelect">
-                                        {% for item in data %}
-                                            <option value="{{ item.column_name }}">{{ item.column_name }}</option>
+                                        {% for field in numeric_fields %}
+                                            <option value="{{ field }}">{{ field }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
@@ -184,7 +184,7 @@
                                                                             const canvas=document.createElement('canvas'); modalChartContainer.appendChild(canvas); const ctx=canvas.getContext('2d');
                                                                             if(chartType==='line'){
                                                                                     new Chart(ctx,{ type:'line', data:{ labels: vals.map(v=>v.x), datasets:[{ label: yField, data: vals.map(v=>v.y), borderColor:'#0C4B8E', backgroundColor:'rgba(12,75,142,0.1)', fill:true }] }, options:{ responsive:true, plugins:{ tooltip:{ callbacks:{ label:function(c){ const s=vals[c.dataIndex].stats; return [`${yField} stats (${s.count} items):`, `Mean: ${s.mean.toFixed(2)}`, `Median: ${s.median.toFixed(2)}`, `Std: ${s.std.toFixed(2)}`]; } } } } } });
-                                                                            }
+                                                                            } else if(chartType==='histogram'){
                                                                                     // For histogram, use yField values directly (assuming raw data is available, but simplified)
                                                                                     alert('Histogram not implemented with pre-computed data. Use line chart.');
                                                                             } else if(chartType==='boxplot'){
