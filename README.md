@@ -1,9 +1,4 @@
 ## Running the Project with Docker
-## Running the Project with Docker
-## Running the Project with Docker
-## Running the Project with Docker
-## Running the Project with Docker
-## Running the Project with Docker
 
 This project is containerized using Docker and Docker Compose for easy setup and deployment. Below are the instructions and requirements specific to this project:
 
