@@ -52,7 +52,7 @@ def make_json_serializable(o):
         pass
     # fallback
     try:
-        return json.loads(json.dumps(o))
+        return json.dumps(o, default=str)
     except Exception:
         return str(o)
 
@@ -180,37 +180,18 @@ def result_view(request, file_id):
     analysis_data_json = json.dumps(analysis_data)
 
     # Get the raw data from the file for analyses
-    processed_chart_data = {}
-    numeric_fields = []
+    processed_chart_data = file_obj.processed_chart_data or {}
     try:
-        if file_obj.file_type == 'csv':
-            df = pd.read_csv(file_obj.file.path)
-        elif file_obj.file_type == 'json':
-            df = pd.read_json(file_obj.file.path)
-        elif file_obj.file_type == 'parquet':
-            df = pd.read_parquet(file_obj.file.path)
-        else:
-            df = pd.DataFrame()
-
-        if not df.empty:
-            numeric_fields = get_numeric_fields(df)
-            # Pre-compute grouped stats for all numeric pairs (for modal)
-            for x_field in numeric_fields:
-                for y_field in numeric_fields:
-                    if x_field != y_field:
-                        key = f"{x_field}_{y_field}"
-                        processed_chart_data[key] = group_and_calculate_stats(df, x_field, y_field)
-
         # Convert DataFrame to a dictionary format (still needed for some JS if any)
-        raw_data = df.to_dict(orient='records')
-        raw_data_json = json.dumps(make_json_serializable(raw_data))
+        raw_data = []
+        raw_data_json = '[]'
     except Exception as e:
         raw_data = []
         raw_data_json = '[]'
         processed_chart_data = {}
 
     processed_chart_data_json = json.dumps(make_json_serializable(processed_chart_data))
-    numeric_fields_json = json.dumps(numeric_fields)
+    numeric_fields_json = json.dumps(file_obj.numeric_fields)
 
     context = {
         'file': file_obj,

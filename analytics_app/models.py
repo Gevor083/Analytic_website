@@ -36,6 +36,8 @@ class UploadedFile(models.Model):
     processed = models.BooleanField(default=False)
     error_message = models.TextField(null=True, blank=True)
     size = models.BigIntegerField(default=0)
+    processed_chart_data = models.JSONField(default=dict)
+    numeric_fields = models.JSONField(default=list)
 
     class Meta:
         ordering = ['-uploaded_at']

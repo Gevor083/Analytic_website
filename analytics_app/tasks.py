@@ -8,6 +8,49 @@ from .models import UploadedFile, ProcessedData
 logger = logging.getLogger(__name__)
 
 
+def group_and_calculate_stats(df, x_field, y_field):
+    """
+    Group data by x_field and calculate statistics for y_field.
+    Returns a list of dicts with x, y (mean), and stats.
+    """
+    if x_field not in df.columns or y_field not in df.columns:
+        return []
+
+    # Group by x_field and calculate stats for y_field
+    grouped = df.groupby(x_field)[y_field].agg(['mean', 'median', 'min', 'max', 'std', 'count']).reset_index()
+
+    # Sort by x_field (assuming it's numeric or sortable)
+    try:
+        grouped = grouped.sort_values(by=x_field)
+    except Exception:
+        pass  # If not sortable, keep as is
+
+    result = []
+    for _, row in grouped.iterrows():
+        x_val = row[x_field]
+        mean_val = row['mean']
+        median_val = row['median']
+        min_val = row['min']
+        max_val = row['max']
+        std_val = row['std']
+        count_val = row['count']
+
+        result.append({
+            'x': x_val,
+            'y': mean_val,  # For line chart, y is the mean
+            'stats': {
+                'mean': mean_val,
+                'median': median_val,
+                'min': min_val,
+                'max': max_val,
+                'std': std_val,
+                'count': count_val
+            }
+        })
+
+    return result
+
+
 @shared_task
 def process_uploaded_file(file_id):
     """Process an uploaded file in chunks, compute basic numeric statistics and save them.
@@ -154,6 +197,50 @@ def process_uploaded_file(file_id):
                     }
                 )
 
+        # Compute processed_chart_data for all numeric pairs
+        processed_chart_data = {}
+        if column_stats:
+            # Read the file again to get df for grouping
+            try:
+                if file_type == 'csv':
+                    if use_path:
+                        df = pd.read_csv(file_obj.file.path)
+                    else:
+                        file_obj.file.open('rb')
+                        file_obj.file.seek(0)
+                        df = pd.read_csv(file_obj.file)
+                elif file_type == 'json':
+                    if use_path:
+                        df = pd.read_json(file_obj.file.path, lines=True)
+                    else:
+                        file_obj.file.open('rb')
+                        file_obj.file.seek(0)
+                        df = pd.read_json(file_obj.file, lines=True)
+                else:
+                    df = pd.DataFrame()
+
+                if not df.empty:
+                    numeric_fields = []
+                    for col in df.columns:
+                        try:
+                            numeric_series = pd.to_numeric(df[col], errors='coerce')
+                            if numeric_series.notna().sum() > 0:
+                                numeric_fields.append(col)
+                        except Exception:
+                            continue
+
+                    # Pre-compute grouped stats for all numeric pairs
+                    for x_field in numeric_fields:
+                        for y_field in numeric_fields:
+                            if x_field != y_field:
+                                key = f"{x_field}_{y_field}"
+                                processed_chart_data[key] = group_and_calculate_stats(df, x_field, y_field)
+
+            except Exception as e:
+                logger.warning(f"Failed to compute processed_chart_data: {e}")
+
+        file_obj.processed_chart_data = processed_chart_data
+        file_obj.numeric_fields = numeric_fields
         file_obj.processed = True
         file_obj.save()
 

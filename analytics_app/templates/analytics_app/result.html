@@ -67,7 +67,17 @@
         </div>
 
         <!-- Area where user-generated charts will appear after modal generation -->
-        <div id="userChartsArea" class="mt-4"></div>
+        <div id="userChartsArea" class="mt-4">
+            <!-- Default chart: TotalPay by Year -->
+            <div class="card shadow-sm border-primary mb-4">
+                <div class="card-body">
+                    <h5 class="card-title text-primary fw-bold mb-3"><i class="fa fa-chart-line"></i> TotalPay by Year</h5>
+                    <div class="chart-container" style="height: 400px;">
+                        <canvas id="defaultChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Area where selected arguments' stats will be shown -->
         <div id="selectedStatsArea" class="row mt-4"></div>

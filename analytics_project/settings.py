@@ -131,7 +131,7 @@ ALLOWED_FILE_TYPES = ['csv', 'json']
 # Use Redis when explicitly enabled (production or when developer enabled it).
 USE_REDIS = os.getenv('USE_REDIS', 'False').lower() == 'true'
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://127.0.0.1:6379/0')
-CELERY_TASK_ALWAYS_EAGER = os.getenv('CELERY_EAGER', 'False').lower() == 'true'
+CELERY_TASK_ALWAYS_EAGER = True
 
 if USE_REDIS:
     CACHES = {
