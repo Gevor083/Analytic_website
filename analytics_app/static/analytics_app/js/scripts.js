@@ -3,6 +3,119 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Analytics website loaded');
 
+    // Initialize group analysis if data is available
+    const initGroupAnalysis = () => {
+        const groupBySelect = document.getElementById('groupByField');
+        const analyzeFieldsSelect = document.getElementById('analyzeFields');
+        const aggregationSelect = document.getElementById('aggregationType');
+        const chartsContainer = document.getElementById('groupAnalysisCharts');
+        
+        if (!groupBySelect || !analyzeFieldsSelect || !chartsContainer || !rawData || !rawData.length) {
+            return;
+        }
+
+        // Get numeric fields
+        const numericFields = getNumericColumns(rawData);
+        
+        // Populate group by select
+        numericFields.forEach(field => {
+            const option = document.createElement('option');
+            option.value = field;
+            option.textContent = field;
+            groupBySelect.appendChild(option);
+        });
+
+        // Populate analyze fields select
+        numericFields.forEach(field => {
+            const option = document.createElement('option');
+            option.value = field;
+            option.textContent = field;
+            analyzeFieldsSelect.appendChild(option);
+        });
+
+        // Function to create/update charts based on selections
+        const updateGroupAnalysis = () => {
+            const xField = groupBySelect.value;
+            const selectedFields = Array.from(analyzeFieldsSelect.selectedOptions).map(opt => opt.value);
+            const aggregationType = aggregationSelect.value;
+
+            chartsContainer.innerHTML = ''; // Clear existing charts
+
+            selectedFields.forEach(field => {
+                const chartContainer = document.createElement('div');
+                chartContainer.className = 'mb-4';
+                chartContainer.innerHTML = `<h6 class="text-primary mb-2">${field} by ${xField}</h6>`;
+
+                const canvas = document.createElement('canvas');
+                chartContainer.appendChild(canvas);
+                chartsContainer.appendChild(chartContainer);
+
+                const ctx = canvas.getContext('2d');
+                const aggregatedData = groupAndAggregate(rawData, xField, field, aggregationType);
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: aggregatedData.map(item => item.x),
+                        datasets: [{
+                            label: field,
+                            data: aggregatedData.map(item => item.y),
+                            borderColor: '#0C4B8E',
+                            backgroundColor: 'rgba(12,75,142,0.1)',
+                            pointRadius: 2,
+                            fill: true,
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: `${field} by ${xField} (${aggregationType})`,
+                                color: '#0C4B8E'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const dataPoint = aggregatedData[context.dataIndex];
+                                        return `${field}: ${context.formattedValue} (${dataPoint.count} items)`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: xField,
+                                    color: '#0C4B8E'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: field,
+                                    color: '#0C4B8E'
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        };
+
+        // Add event listeners
+        groupBySelect.addEventListener('change', updateGroupAnalysis);
+        analyzeFieldsSelect.addEventListener('change', updateGroupAnalysis);
+        aggregationSelect.addEventListener('change', updateGroupAnalysis);
+
+        // Initial update if fields are pre-selected
+        if (groupBySelect.value && analyzeFieldsSelect.selectedOptions.length > 0) {
+            updateGroupAnalysis();
+        }
+    };
+
     // Function to check if a value is numeric
     const isNumeric = (value) => {
         return !isNaN(value) && value !== null && value !== '';
@@ -220,7 +333,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Handle chart creation and display
+    // Initialize group analysis
+    initGroupAnalysis();
+});    // Handle chart creation and display
     const createChart = (container, data, field) => {
         const chartContainer = document.createElement('div');
         chartContainer.className = 'chart-container mb-4';

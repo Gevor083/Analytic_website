@@ -8,6 +8,41 @@
     <h1 class="mb-4 text-primary fw-bold"><i class="fa fa-chart-bar"></i> Results</h1>
     <p class="mb-4">Here you can see the results of your uploaded data.</p>
 
+    <!-- Group Analysis Section -->
+    <div class="card shadow-sm border-primary mb-4">
+        <div class="card-body">
+            <h5 class="card-title text-primary fw-bold mb-3">
+                <i class="fa fa-chart-line"></i> Group Analysis
+            </h5>
+            <div class="mb-3">
+                <label class="form-label me-2">Group by (X-axis):</label>
+                <select id="groupByField" class="form-select form-select-sm d-inline-block w-auto">
+                    <!-- Will be populated with numeric fields -->
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label me-2">Analyze fields:</label>
+                <select id="analyzeFields" class="form-select form-select-sm" multiple>
+                    <!-- Will be populated with numeric fields -->
+                </select>
+                <div class="form-text">Hold Ctrl (Cmd on Mac) to select multiple fields to analyze.</div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label me-2">Aggregation:</label>
+                <select id="aggregationType" class="form-select form-select-sm d-inline-block w-auto">
+                    <option value="avg">Average</option>
+                    <option value="sum">Sum</option>
+                    <option value="min">Minimum</option>
+                    <option value="max">Maximum</option>
+                    <option value="count">Count</option>
+                </select>
+            </div>
+            <div id="groupAnalysisCharts" class="mt-4">
+                <!-- Charts will be rendered here -->
+            </div>
+        </div>
+    </div>
+
     <!-- Modal: Chart Selector -->
     <div class="modal fade" id="chartModal" tabindex="-1" aria-labelledby="chartModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-md">
