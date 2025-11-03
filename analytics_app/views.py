@@ -96,8 +96,8 @@ def upload_view(request):
         from .tasks import process_uploaded_file
         try:
             if getattr(settings, 'CELERY_TASK_ALWAYS_EAGER', False):
-                # Run synchronously in-process to avoid needing a broker/worker in dev
-                process_uploaded_file(obj.id)
+                # Run the task synchronously in a reliable way (use apply to execute locally)
+                process_uploaded_file.apply(args=(obj.id,))
             else:
                 process_uploaded_file.delay(obj.id)
         except Exception as e:
