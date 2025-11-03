@@ -46,221 +46,221 @@
                                         {% for item in data %}
                                             <option value="{{ item.column_name }}">{{ item.column_name }}</option>
                                         {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="xAxisSelect" class="form-label">Select X-axis (Field to group by)</label>
-                                    <select class="form-select" id="xAxisSelect">
-                                        {% for item in data %}
-                                            <option value="{{ item.column_name }}">{{ item.column_name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <p class="small text-muted">Step 2 of 2 — select fields for analysis and grouping.</p>
-                            </div>
+                                    {% extends 'analytics_app/base.html' %}
+                                    {% load dict_extras %}
 
-                            <div id="modalChartContainer" class="mb-3"></div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" id="modalBackBtn" class="btn btn-secondary d-none">Back</button>
-                        <button type="button" id="modalNextBtn" class="btn btn-primary">Next</button>
-                        <button type="button" id="generateChartBtn" class="btn btn-success d-none">Generate</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+                                    {% block title %}Result{% endblock %}
 
-        <div id="userChartsArea" class="mt-4"></div>
-        <div id="selectedStatsArea" class="row mt-4"></div>
+                                    {% block content %}
+                                    <section class="result-section container py-5 fade-in">
+                                            <h1 class="mb-4 text-primary fw-bold"><i class="fa fa-chart-bar"></i> Results</h1>
+                                            <p class="mb-4">Here you can see the results of your uploaded data.</p>
 
-        <div class="row">
-                {% for item in data %}
-                        {% with analysis=analysis_data|get_item:item.column_name %}
-                        <div class="col-md-6 mb-4">
-                                <div class="card shadow-sm border-primary">
-                                        <div class="card-body">
-                                                <h5 class="card-title text-primary fw-bold mb-2"><i class="fa fa-table"></i> {{ item.column_name }}</h5>
-                                                <p class="card-text mb-3">Total: <span class="badge bg-primary fs-5">{{ item.value }}</span></p>
-                                                <ul class="list-group mb-3">
-                                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                                <span><i class="fa fa-calculator text-primary"></i> Mean</span>
-                                                                <span class="fw-bold">{{ analysis.stats.mean }}</span>
-                                                        </li>
-                                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                                <span><i class="fa fa-ruler-horizontal text-primary"></i> Median</span>
-                                                                <span class="fw-bold">{{ analysis.stats.median }}</span>
-                                                        </li>
-                                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                                <span><i class="fa fa-arrow-down text-primary"></i> Min</span>
-                                                                <span class="fw-bold">{{ analysis.stats.min }}</span>
-                                                        </li>
-                                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                                <span><i class="fa fa-arrow-up text-primary"></i> Max</span>
-                                                                <span class="fw-bold">{{ analysis.stats.max }}</span>
-                                                        </li>
-                                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                                <span><i class="fa fa-wave-square text-primary"></i> Std</span>
-                                                                <span class="fw-bold">{{ analysis.stats.std }}</span>
-                                                        </li>
-                                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                                <span><i class="fa fa-question-circle text-primary"></i> Missing</span>
-                                                                <span class="fw-bold">{{ analysis.stats.missing }}</span>
-                                                        </li>
-                                                </ul>
-                                                <div class="mb-3">
-                                                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#chartModal">Open chart builder</button>
+                                            <!-- Modal: Chart Selector -->
+                                            <div class="modal fade" id="chartModal" tabindex="-1" aria-labelledby="chartModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered modal-md">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="chartModalLabel">Create a chart</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <form id="chartForm">
+
+                                                                <!-- Step 1: Choose chart type -->
+                                                                <div class="modal-step" data-step="1">
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label">Chart type</label>
+                                                                        <div>
+                                                                            <div class="form-check form-check-inline">
+                                                                                <input class="form-check-input" type="radio" name="chartType" id="typeLine" value="line" checked>
+                                                                                <label class="form-check-label" for="typeLine">Line</label>
+                                                                            </div>
+                                                                            <div class="form-check form-check-inline">
+                                                                                <input class="form-check-input" type="radio" name="chartType" id="typeHist" value="histogram">
+                                                                                <label class="form-check-label" for="typeHist">Histogram</label>
+                                                                            </div>
+                                                                            <div class="form-check form-check-inline">
+                                                                                <input class="form-check-input" type="radio" name="chartType" id="typeBox" value="boxplot">
+                                                                                <label class="form-check-label" for="typeBox">Boxplot</label>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <p class="small text-muted">Step 1 of 2 — choose which type of graphic you want to create.</p>
+                                                                </div>
+
+                                                                <!-- Step 2: Choose axes -->
+                                                                <div class="modal-step d-none" data-step="2">
+                                                                    <div class="mb-3">
+                                                                        <label for="yAxisSelect" class="form-label">Select Y-axis (Field to analyze)</label>
+                                                                        <select class="form-select" id="yAxisSelect">
+                                                                            {% for item in data %}
+                                                                                <option value="{{ item.column_name }}">{{ item.column_name }}</option>
+                                                                            {% endfor %}
+                                                                        </select>
+                                                                    </div>
+                                                                    <div class="mb-3">
+                                                                        <label for="xAxisSelect" class="form-label">Select X-axis (Field to group by)</label>
+                                                                        <select class="form-select" id="xAxisSelect">
+                                                                            {% for item in data %}
+                                                                                <option value="{{ item.column_name }}">{{ item.column_name }}</option>
+                                                                            {% endfor %}
+                                                                        </select>
+                                                                    </div>
+                                                                    <p class="small text-muted">Step 2 of 2 — select fields for analysis and grouping.</p>
+                                                                </div>
+
+                                                                <div id="modalChartContainer" class="mb-3"></div>
+
+                                                            </form>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" id="modalBackBtn" class="btn btn-secondary d-none">Back</button>
+                                                            <button type="button" id="modalNextBtn" class="btn btn-primary">Next</button>
+                                                            <button type="button" id="generateChartBtn" class="btn btn-success d-none">Generate</button>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                        </div>
-                                </div>
-                        </div>
-                        {% endwith %}
-                {% endfor %}
-        </div>
-</section>
-{% endblock %}
+                                            </div>
 
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-box-and-violin@3.0.1/build/Chart.BoxPlot.min.js"></script>
-<script>
-        // Minimal, robust modal chart flow. Uses server-provided JSON: chart_data_json, analysis_data_json, raw_data_json
-        function initCharts() {
-                let chartData = {{ chart_data_json|safe }};
-                let analysisData = {{ analysis_data_json|safe }};
-                let rawData = {{ raw_data_json|safe }};
+                                            <!-- Area where user-generated charts will appear after modal generation -->
+                                            <div id="userChartsArea" class="mt-4"></div>
 
-                try { if (typeof chartData === 'string') chartData = JSON.parse(chartData); } catch(e){ chartData = {}; }
-                try { if (typeof analysisData === 'string') analysisData = JSON.parse(analysisData); } catch(e){ analysisData = {}; }
-                try { if (typeof rawData === 'string') rawData = JSON.parse(rawData); } catch(e){ rawData = []; }
+                                            <!-- Area where selected arguments' stats will be shown -->
+                                            <div id="selectedStatsArea" class="row mt-4"></div>
 
-                const chartModalEl = document.getElementById('chartModal');
-                const modalNextBtn = document.getElementById('modalNextBtn');
-                const modalBackBtn = document.getElementById('modalBackBtn');
-                const generateChartBtn = document.getElementById('generateChartBtn');
-                const xAxisSelect = document.getElementById('xAxisSelect');
-                const yAxisSelect = document.getElementById('yAxisSelect');
-                const modalChartContainer = document.getElementById('modalChartContainer');
+                                            <div class="row">
+                                                    {% for item in data %}
+                                                            {% with analysis=analysis_data|get_item:item.column_name %}
+                                                            <div class="col-md-6 mb-4">
+                                                                    <div class="card shadow-sm border-primary">
+                                                                            <div class="card-body">
+                                                                                    <h5 class="card-title text-primary fw-bold mb-2"><i class="fa fa-table"></i> {{ item.column_name }}</h5>
+                                                                                    <p class="card-text mb-3">Total: <span class="badge bg-primary fs-5">{{ item.value }}</span></p>
+                                                                                    <ul class="list-group mb-3">
+                                                                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                                                                    <span><i class="fa fa-calculator text-primary"></i> Mean</span>
+                                                                                                    <span class="fw-bold">{{ analysis.stats.mean }}</span>
+                                                                                            </li>
+                                                                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                                                                    <span><i class="fa fa-ruler-horizontal text-primary"></i> Median</span>
+                                                                                                    <span class="fw-bold">{{ analysis.stats.median }}</span>
+                                                                                            </li>
+                                                                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                                                                    <span><i class="fa fa-arrow-down text-primary"></i> Min</span>
+                                                                                                    <span class="fw-bold">{{ analysis.stats.min }}</span>
+                                                                                            </li>
+                                                                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                                                                    <span><i class="fa fa-arrow-up text-primary"></i> Max</span>
+                                                                                                    <span class="fw-bold">{{ analysis.stats.max }}</span>
+                                                                                            </li>
+                                                                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                                                                    <span><i class="fa fa-wave-square text-primary"></i> Std</span>
+                                                                                                    <span class="fw-bold">{{ analysis.stats.std }}</span>
+                                                                                            </li>
+                                                                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                                                                    <span><i class="fa fa-question-circle text-primary"></i> Missing</span>
+                                                                                                    <span class="fw-bold">{{ analysis.stats.missing }}</span>
+                                                                                            </li>
+                                                                                    </ul>
+                                                                                    <div class="mb-3">
+                                                                                            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#chartModal">Open chart builder</button>
+                                                                                    </div>
+                                                                            </div>
+                                                                    </div>
+                                                            </div>
+                                                            {% endwith %}
+                                                    {% empty %}
+                                                            <div class="col-12">
+                                                                    <div class="alert alert-info d-flex align-items-center" role="alert">
+                                                                            <i class="fa fa-info-circle me-2"></i> No results found for this file.
+                                                                    </div>
+                                                            </div>
+                                                    {% endfor %}
+                                            </div>
+                                    </section>
+                                    {% endblock %}
 
-                const bootstrapModal = chartModalEl ? bootstrap.Modal.getOrCreateInstance(chartModalEl) : null;
+                                    {% block extra_js %}
+                                    <!-- Boxplot plugin (used only when user selects boxplot) -->
+                                    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-box-and-violin@3.0.1/build/Chart.BoxPlot.min.js"></script>
+                                    <script>
+                                            // Minimal, robust modal chart flow. Uses server-provided JSON: chart_data_json, analysis_data_json, raw_data_json
+                                            function initCharts() {
+                                                    let chartData = {{ chart_data_json|safe }};
+                                                    let analysisData = {{ analysis_data_json|safe }};
+                                                    let rawData = {{ raw_data_json|safe }};
 
-                function showStep(step){
-                        document.querySelectorAll('.modal-step').forEach(el=>el.classList.add('d-none'));
-                        const stepEl = document.querySelector('.modal-step[data-step="'+step+'"]');
-                        if(stepEl) stepEl.classList.remove('d-none');
-                        if(step===1){ modalBackBtn?.classList.add('d-none'); modalNextBtn?.classList.remove('d-none'); generateChartBtn?.classList.add('d-none'); }
-                        else { modalBackBtn?.classList.remove('d-none'); modalNextBtn?.classList.add('d-none'); generateChartBtn?.classList.remove('d-none'); }
-                }
+                                                    try { if (typeof chartData === 'string') chartData = JSON.parse(chartData); } catch(e){ chartData = {}; }
+                                                    try { if (typeof analysisData === 'string') analysisData = JSON.parse(analysisData); } catch(e){ analysisData = {}; }
+                                                    try { if (typeof rawData === 'string') rawData = JSON.parse(rawData); } catch(e){ rawData = []; }
 
-                modalNextBtn?.addEventListener('click', ()=> showStep(2));
-                modalBackBtn?.addEventListener('click', ()=> showStep(1));
+                                                    const chartModalEl = document.getElementById('chartModal');
+                                                    const modalNextBtn = document.getElementById('modalNextBtn');
+                                                    const modalBackBtn = document.getElementById('modalBackBtn');
+                                                    const generateChartBtn = document.getElementById('generateChartBtn');
+                                                    const xAxisSelect = document.getElementById('xAxisSelect');
+                                                    const yAxisSelect = document.getElementById('yAxisSelect');
+                                                    const modalChartContainer = document.getElementById('modalChartContainer');
 
-                function cleanupModalState(){ try{ document.querySelectorAll('.modal-backdrop').forEach(b=>b.remove()); document.body.classList.remove('modal-open'); }catch(e){} }
+                                                    const bootstrapModal = chartModalEl ? bootstrap.Modal.getOrCreateInstance(chartModalEl) : null;
 
-                function generateChartsFromSelection(){
-                        try{
-                                if(!xAxisSelect || !yAxisSelect) return alert('X/Y selectors not found.');
-                                const xField = xAxisSelect.value; const yField = yAxisSelect.value;
-                                if(!xField||!yField){ alert('Please select X and Y fields'); return; }
+                                                    function showStep(step){
+                                                            document.querySelectorAll('.modal-step').forEach(el=>el.classList.add('d-none'));
+                                                            const stepEl = document.querySelector('.modal-step[data-step="'+step+'"]');
+                                                            if(stepEl) stepEl.classList.remove('d-none');
+                                                            if(step===1){ modalBackBtn?.classList.add('d-none'); modalNextBtn?.classList.remove('d-none'); generateChartBtn?.classList.add('d-none'); }
+                                                            else { modalBackBtn?.classList.remove('d-none'); modalNextBtn?.classList.add('d-none'); generateChartBtn?.classList.remove('d-none'); }
+                                                    }
 
-                                const chartType = document.querySelector('input[name="chartType"]:checked')?.value || 'line';
-                                modalChartContainer.innerHTML = '';
+                                                    modalNextBtn?.addEventListener('click', ()=> showStep(2));
+                                                    modalBackBtn?.addEventListener('click', ()=> showStep(1));
 
-                                // group rawData by xField and compute mean of yField
-                                const grouped = {};
-                                (rawData||[]).forEach(r=>{ const k = r[xField]; const v = parseFloat(r[yField]); if(!grouped[k]) grouped[k]=[]; if(!isNaN(v)) grouped[k].push(v); });
-                                const vals = Object.entries(grouped).map(([k,a])=>({x:k,y: a.reduce((s,n)=>s+n,0)/a.length})).sort((a,b)=> (a.x>b.x)?1:(a.x<b.x)?-1:0);
+                                                    function cleanupModalState(){ try{ document.querySelectorAll('.modal-backdrop').forEach(b=>b.remove()); document.body.classList.remove('modal-open'); }catch(e){} }
 
-                                if(vals.length===0){ const p=document.createElement('p'); p.className='text-muted small'; p.textContent = 'No numeric data to plot.'; modalChartContainer.appendChild(p); }
-                                else{
-                                        const canvas=document.createElement('canvas'); modalChartContainer.appendChild(canvas); const ctx=canvas.getContext('2d');
-                                        if(chartType==='line'){
-                                                new Chart(ctx,{ type:'line', data:{ labels: vals.map(v=>v.x), datasets:[{ label: yField, data: vals.map(v=>v.y), borderColor:'#0C4B8E', backgroundColor:'rgba(12,75,142,0.1)', fill:true }] }, options:{ responsive:true } });
-                                        } else if(chartType==='histogram'){
-                                                const all=(rawData||[]).map(r=>parseFloat(r[yField])).filter(v=>!isNaN(v)); const bins=20; const min=Math.min(...all); const max=Math.max(...all); const bw=(max-min)/bins||1; const counts=new Array(bins).fill(0); all.forEach(v=>{ const i=Math.min(bins-1,Math.floor((v-min)/bw)); if(i>=0) counts[i]++; }); const labels=counts.map((_,i)=>(min+i*bw).toFixed(2)); new Chart(ctx,{ type:'bar', data:{ labels:labels, datasets:[{ label:yField+' histogram', data:counts, backgroundColor:'rgba(12,75,142,0.7)' }] }, options:{ responsive:true } });
-                                        } else if(chartType==='boxplot'){
-                                                const all=(rawData||[]).map(r=>parseFloat(r[yField])).filter(v=>!isNaN(v)); let box=[]; if(all.length){ all.sort((a,b)=>a-b); const min=all[0]; const max=all[all.length-1]; const med=all.length%2? all[(all.length-1)/2] : (all[all.length/2-1]+all[all.length/2])/2; const q1=all[Math.floor((all.length-1)/4)]; const q3=all[Math.ceil((all.length-1)*3/4)]; box=[[min,q1,med,q3,max]]; } new Chart(ctx,{ type:'boxplot', data:{ labels:[yField], datasets:[{ label:yField, data:box, backgroundColor:'rgba(12,75,142,0.4)' }] }, options:{ responsive:true } });
-                                        }
-                                }
+                                                    function generateChartsFromSelection(){
+                                                            try{
+                                                                    if(!xAxisSelect || !yAxisSelect) return alert('X/Y selectors not found.');
+                                                                    const xField = xAxisSelect.value; const yField = yAxisSelect.value;
+                                                                    if(!xField||!yField){ alert('Please select X and Y fields'); return; }
 
-                                // Render main chart area
-                                const userArea=document.getElementById('userChartsArea'); userArea.innerHTML=''; const card=document.createElement('div'); card.className='card shadow-sm border-primary mb-4'; card.innerHTML=`<div class="card-body"><h5 class="card-title text-primary fw-bold mb-3"><i class="fa fa-chart-line"></i> ${yField} by ${xField}</h5><div class="chart-container"></div></div>`; userArea.appendChild(card); const userCanvas=document.createElement('canvas'); card.querySelector('.chart-container').appendChild(userCanvas); new Chart(userCanvas.getContext('2d'),{ type:'line', data:{ labels: vals.map(v=>v.x), datasets:[{ label:yField, data: vals.map(v=>v.y), borderColor:'#0C4B8E', backgroundColor:'rgba(12,75,142,0.1)', fill:true }] }, options:{ responsive:true } });
+                                                                    const chartType = document.querySelector('input[name="chartType"]:checked')?.value || 'line';
+                                                                    modalChartContainer.innerHTML = '';
 
-                                try{ bootstrapModal?.hide(); } catch(e){}
-                                cleanupModalState();
-                        }catch(e){ console.error(e); alert('Error generating charts: '+(e.message||e)); }
-                }
+                                                                    // group rawData by xField and compute mean of yField
+                                                                    const grouped = {};
+                                                                    (rawData||[]).forEach(r=>{ const k = r[xField]; const v = parseFloat(r[yField]); if(!grouped[k]) grouped[k]=[]; if(!isNaN(v)) grouped[k].push(v); });
+                                                                    const vals = Object.entries(grouped).map(([k,a])=>({x:k,y: a.reduce((s,n)=>s+n,0)/a.length})).sort((a,b)=> (a.x>b.x)?1:(a.x<b.x)?-1:0);
 
-                if(generateChartBtn) generateChartBtn.addEventListener('click', generateChartsFromSelection);
+                                                                    if(vals.length===0){ const p=document.createElement('p'); p.className='text-muted small'; p.textContent = 'No numeric data to plot.'; modalChartContainer.appendChild(p); }
+                                                                    else{
+                                                                            const canvas=document.createElement('canvas'); modalChartContainer.appendChild(canvas); const ctx=canvas.getContext('2d');
+                                                                            if(chartType==='line'){
+                                                                                    new Chart(ctx,{ type:'line', data:{ labels: vals.map(v=>v.x), datasets:[{ label: yField, data: vals.map(v=>v.y), borderColor:'#0C4B8E', backgroundColor:'rgba(12,75,142,0.1)', fill:true }] }, options:{ responsive:true } });
+                                                                            } else if(chartType==='histogram'){
+                                                                                    const all=(rawData||[]).map(r=>parseFloat(r[yField])).filter(v=>!isNaN(v)); const bins=20; const min=Math.min(...all); const max=Math.max(...all); const bw=(max-min)/bins||1; const counts=new Array(bins).fill(0); all.forEach(v=>{ const i=Math.min(bins-1,Math.floor((v-min)/bw)); if(i>=0) counts[i]++; }); const labels=counts.map((_,i)=>(min+i*bw).toFixed(2)); new Chart(ctx,{ type:'bar', data:{ labels:labels, datasets:[{ label:yField+' histogram', data:counts, backgroundColor:'rgba(12,75,142,0.7)' }] }, options:{ responsive:true } });
+                                                                            } else if(chartType==='boxplot'){
+                                                                                    const all=(rawData||[]).map(r=>parseFloat(r[yField])).filter(v=>!isNaN(v)); let box=[]; if(all.length){ all.sort((a,b)=>a-b); const min=all[0]; const max=all[all.length-1]; const med=all.length%2? all[(all.length-1)/2] : (all[all.length/2-1]+all[all.length/2])/2; const q1=all[Math.floor((all.length-1)/4)]; const q3=all[Math.ceil((all.length-1)*3/4)]; box=[[min,q1,med,q3,max]]; } new Chart(ctx,{ type:'boxplot', data:{ labels:[yField], datasets:[{ label:yField, data:box, backgroundColor:'rgba(12,75,142,0.4)' }] }, options:{ responsive:true } });
+                                                                            }
+                                                                    }
 
-                // Show initial modal state when opened
-                if(chartModalEl){ chartModalEl.addEventListener('show.bs.modal', ()=> showStep(1)); }
-        }
+                                                                    // Render main chart area
+                                                                    const userArea=document.getElementById('userChartsArea'); userArea.innerHTML=''; const card=document.createElement('div'); card.className='card shadow-sm border-primary mb-4'; card.innerHTML=`<div class="card-body"><h5 class="card-title text-primary fw-bold mb-3"><i class="fa fa-chart-line"></i> ${yField} by ${xField}</h5><div class="chart-container"></div></div>`; userArea.appendChild(card); const userCanvas=document.createElement('canvas'); card.querySelector('.chart-container').appendChild(userCanvas); new Chart(userCanvas.getContext('2d'),{ type:'line', data:{ labels: vals.map(v=>v.x), datasets:[{ label:yField, data: vals.map(v=>v.y), borderColor:'#0C4B8E', backgroundColor:'rgba(12,75,142,0.1)', fill:true }] }, options:{ responsive:true } });
 
-        if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', initCharts); } else { initCharts(); }
-</script>
-{% endblock %}
-                                <span><i class="fa fa-question-circle text-primary"></i> Missing</span>
-                                <span class="fw-bold">{{ analysis.stats.missing }}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span><i class="fa fa-exclamation-triangle text-warning"></i> Outliers</span>
-                                <span class="fw-bold">{{ analysis.stats.outlier_count }}</span>
-                            </li>
-                        </ul>
-                        {% if analysis.urgent %}
-                        <div class="alert alert-warning d-flex align-items-center mb-3">
-                            <i class="fa fa-exclamation-circle me-2"></i>
-                            <ul class="mb-0">
-                                {% for msg in analysis.urgent %}
-                                <li>{{ msg }}</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        {% endif %}
-                        <div class="mb-3">
-                            <div class="x-axis-selector mb-2">
-                                <label class="form-label">Select X-axis: </label>
-                                <select class="form-select form-select-sm d-inline-block w-auto" 
-                                        data-chart="line-{{ item.column_name|slugify }}"
-                                        data-y-field="{{ item.column_name|escapejs }}">
-                                    <!-- Options will be populated by JavaScript -->
-                                </select>
-                            </div>
-                            <canvas id="line-{{ item.column_name|slugify }}" data-col="{{ item.column_name|escapejs }}" height="150"></canvas>
-                        </div>
-                        <div>
-                            <canvas id="hist-{{ item.column_name|slugify }}" data-col="{{ item.column_name|escapejs }}" height="150" class="mt-3"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endwith %}
-        {% empty %}
-            <div class="col-12">
-                <div class="alert alert-info d-flex align-items-center" role="alert">
-                    <i class="fa fa-info-circle me-2"></i> No results found for this file.
-                </div>
-            </div>
-        {% endfor %}
-    </div>
-</section>
-{% endblock %}
+                                                                    try{ bootstrapModal?.hide(); } catch(e){}
+                                                                    cleanupModalState();
+                                                            }catch(e){ console.error(e); alert('Error generating charts: '+(e.message||e)); }
+                                                    }
 
-{% block extra_js %}
-<!-- Boxplot plugin (used only when user selects boxplot) -->
-<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-box-and-violin@3.0.1/build/Chart.BoxPlot.min.js"></script>
-<script>
-    function initCharts() {
-        // Get chart data and analysis data from Django context (JSON-serialized strings)
-        let chartData = {{ chart_data_json|safe }};
-        let analysisData = {{ analysis_data_json|safe }};
-        let rawData = {{ raw_data_json|safe }};
+                                                    if(generateChartBtn) generateChartBtn.addEventListener('click', generateChartsFromSelection);
 
-        // Ensure chartData and analysisData are objects (parse if they are strings)
-        try {
-            if (typeof chartData === 'string') chartData = JSON.parse(chartData);
-        } catch (e) { console.warn('Unable to parse chartData JSON:', e); chartData = {}; }
-        try {
+                                                    // Show initial modal state when opened
+                                                    if(chartModalEl){ chartModalEl.addEventListener('show.bs.modal', ()=> showStep(1)); }
+                                            }
+
+                                            if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', initCharts); } else { initCharts(); }
+                                    </script>
+                                    {% endblock %}
             if (typeof analysisData === 'string') analysisData = JSON.parse(analysisData);
         } catch (e) { console.warn('Unable to parse analysisData JSON:', e); analysisData = {}; }
 
