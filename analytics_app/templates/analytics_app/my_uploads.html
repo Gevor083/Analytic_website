@@ -13,6 +13,11 @@
                             <i class="fa fa-history"></i>
                         </span>
                         <h2 class="fw-bold mt-3 mb-1">My Uploads</h2>
+                        <p class="text-muted">Total uploaded files: <span class="badge bg-info">{{ total_uploaded_files }}</span></p>
+                        {% if last_upload_date %}
+                        <p class="text-muted">Last upload: <span class="badge bg-info">{{ last_upload_date|date:'Y-m-d H:i' }}</span></p>
+                        <p class="text-muted">Average rows per dataset: <span class="badge bg-info">{{ average_rows_per_dataset|floatformat:2 }}</span></p>
+                        {% endif %}
                     </div>
                     {% if uploads %}
                         <div class="table-responsive">
@@ -23,6 +28,8 @@
                                         <th>File Name</th>
                                         <th>Uploaded At</th>
                                         <th>File Type</th>
+                                        <th>File Size</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -32,6 +39,21 @@
                                         <td><i class="fa fa-file-alt text-primary"></i> {{ file.file.name|slice:'8:' }}</td>
                                         <td>{{ file.uploaded_at|date:'Y-m-d H:i' }}</td>
                                         <td><span class="badge bg-primary">{{ file.file_type|upper }}</span></td>
+                                        <td>{{ file.size|filesizeformat }}</td>
+                                        <td>
+                                            <form action="{% url 'delete_file' file.id %}" method="post" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger btn-sm" title="Delete File">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </form>
+                                            <form action="{% url 'reanalyze_file' file.id %}" method="post" class="d-inline ms-2">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-primary btn-sm" title="Re-analyze File">
+                                                    <i class="fa fa-sync-alt"></i>
+                                                </button>
+                                            </form>
+                                        </td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>

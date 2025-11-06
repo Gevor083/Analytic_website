@@ -34,4 +34,7 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('register/', views.register_view, name='register'),
     path('admin/', views.admin_dashboard_view, name='admin_dashboard'),
+    path('chart/<int:file_id>/', views.generate_chart_view, name='generate_chart'),
+    path('missing_values_chart/<int:file_id>/', views.missing_values_chart_view, name='missing_values_chart'),
+    path('reanalyze/<int:file_id>/', views.reanalyze_file_view, name='reanalyze_file'),
 ]

@@ -18,49 +18,108 @@
                     </div>
                     <div class="modal-body">
                         <form id="chartForm">
-                            <div class="modal-step" data-step="1">
-                                <div class="mb-3">
-                                    <label class="form-label">Chart type</label>
-                                    <div>
+                            <div class="mb-3">
+                                <label class="form-label">Chart type</label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="chartType" id="typeLine" value="line" checked>
+    <label class="form-check-label" for="typeLine">Line Chart</label>
+</div>
+<div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="chartType" id="typeBar" value="bar">
+    <label class="form-check-label" for="typeBar">Bar Chart</label>
+</div>
+<div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="chartType" id="typeHistogram" value="histogram">
+    <label class="form-check-label" for="typeHistogram">Histogram</label>
+</div>
+<div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="chartType" id="typePie" value="pie">
+    <label class="form-check-label" for="typePie">Pie Chart</label>
+</div>
+<div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="chartType" id="typeScatter" value="scatter">
+    <label class="form-check-label" for="typeScatter">Scatter Plot</label>
+</div>
+<div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="chartType" id="typeBoxplot" value="boxplot">
+    <label class="form-check-label" for="typeBoxplot">Box Plot</label>
+</div>
+<div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="chartType" id="typeCorrelation" value="correlation">
+    <label class="form-check-label" for="typeCorrelation">Correlation Matrix</label>
+</div>                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="yAxisSelect" class="form-label">Select Y-axis (Field to analyze)</label>
+                                <select class="form-select" id="yAxisSelect"></select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="xAxisSelect" class="form-label">Select X-axis (Field to group by)</label>
+                                <select class="form-select" id="xAxisSelect"></select>
+                            </div>
+
+                            <!-- Filter Options -->
+                            <div class="mb-3">
+                                <label class="form-label">Filter Data (Optional)</label>
+                                <div class="row g-2">
+                                    <div class="col-md-5">
+                                        <select class="form-select" id="filterColumnSelect">
+                                            <option value="">Select Column</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select class="form-select" id="filterOperatorSelect">
+                                            <option value="eq">=</option>
+                                            <option value="ne">!=</option>
+                                            <option value="gt">></option>
+                                            <option value="lt"><</option>
+                                            <option value="ge">>=</option>
+                                            <option value="le"><=</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input type="text" class="form-control" id="filterValueInput" placeholder="Value">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sort Options -->
+                            <div class="mb-3">
+                                <label class="form-label">Sort Data (Optional)</label>
+                                <div class="row g-2">
+                                    <div class="col-md-7">
+                                        <select class="form-select" id="sortColumnSelect">
+                                            <option value="">Select Column</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-5">
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="radio" name="chartType" id="typeLine" value="line" checked>
-                                            <label class="form-check-label" for="typeLine">Line</label>
+                                            <input class="form-check-input" type="radio" name="sortOrder" id="sortAsc" value="asc" checked>
+                                            <label class="form-check-label" for="sortAsc">Asc</label>
                                         </div>
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="radio" name="chartType" id="typeHist" value="histogram">
-                                            <label class="form-check-label" for="typeHist">Histogram</label>
-                                        </div>
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="radio" name="chartType" id="typeBox" value="boxplot">
-                                            <label class="form-check-label" for="typeBox">Boxplot</label>
+                                            <input class="form-check-input" type="radio" name="sortOrder" id="sortDesc" value="desc">
+                                            <label class="form-check-label" for="sortDesc">Desc</label>
                                         </div>
                                     </div>
                                 </div>
-                                <p class="small text-muted">Step 1 of 2 — choose which type of graphic you want to create.</p>
                             </div>
-
-                            <div class="modal-step d-none" data-step="2">
-                                <div class="mb-3">
-                                    <label for="yAxisSelect" class="form-label">Select Y-axis (Field to analyze)</label>
-                                    <select class="form-select" id="yAxisSelect">
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="xAxisSelect" class="form-label">Select X-axis (Field to group by)</label>
-                                    <select class="form-select" id="xAxisSelect">
-                                    </select>
-                                </div>
-                                <p class="small text-muted">Step 2 of 2 — select fields for analysis and grouping.</p>
-                            </div>
-
-                            <div id="modalChartContainer" class="mb-3"></div>
-
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" id="modalBackBtn" class="btn btn-secondary d-none">Back</button>
-                        <button type="button" id="modalNextBtn" class="btn btn-primary">Next</button>
-                        <button type="button" id="generateChartBtn" class="btn btn-success d-none">Generate</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" id="generateChartBtn" class="btn btn-primary">Generate</button>
+                        <div class="btn-group" role="group" aria-label="Download Chart">
+                            <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                Download Chart
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" data-format="png">PNG</a></li>
+                                <li><a class="dropdown-item" href="#" data-format="svg">SVG</a></li>
+                                <li><a class="dropdown-item" href="#" data-format="pdf">PDF</a></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -68,15 +127,6 @@
 
         <!-- Area where user-generated charts will appear after modal generation -->
         <div id="userChartsArea" class="mt-4">
-            <!-- Default chart: TotalPay by Year -->
-            <div class="card shadow-sm border-primary mb-4">
-                <div class="card-body">
-                    <h5 class="card-title text-primary fw-bold mb-3"><i class="fa fa-chart-line"></i> TotalPay by Year</h5>
-                    <div class="chart-container" style="height: 400px;">
-                        <canvas id="defaultChart"></canvas>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- Area where selected arguments' stats will be shown -->
@@ -85,6 +135,7 @@
         <div class="row">
                         <div class="mb-3">
                 <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#chartModal">Open chart builder</button>
+                <a href="{% url 'missing_values_chart' file.id %}" class="btn btn-outline-secondary" target="_blank">Show Missing Values Chart</a>
         </div>
                 {% for item in data %}
                         {% with analysis=analysis_data|get_item:item.column_name %}
@@ -115,9 +166,23 @@
                                                                 <span class="fw-bold">{{ analysis.stats.std }}</span>
                                                         </li>
                                                         <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                                <span><i class="fa fa-tag text-primary"></i> Data Type</span>
+                                                                <span class="fw-bold">{{ analysis.data_type|capfirst }}</span>
+                                                        </li>
+                                                        <li class="list-group-item d-flex justify-content-between align-items-center">
                                                                 <span><i class="fa fa-question-circle text-primary"></i> Missing</span>
                                                                 <span class="fw-bold">{{ analysis.stats.missing }}</span>
+                         
                                                         </li>
+                                                        {% if analysis.stats.outliers.count > 0 %}
+                                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                                <span><i class="fa fa-exclamation-triangle text-danger"></i> Outliers</span>
+                                                                <span class="fw-bold">{{ analysis.stats.outliers.count }}</span>
+                                                        </li>
+                                                        <li class="list-group-item">
+                                                            <small>Sample: {{ analysis.stats.outliers.values|join:", " }}</small>
+                                                        </li>
+                                                        {% endif %}
                                                 </ul>
                                                 
                                         </div>
@@ -134,99 +199,183 @@
         </div>
 
 {% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const generateChartBtn = document.getElementById('generateChartBtn');
+    const chartModalEl = document.getElementById('chartModal');
+    const userChartsArea = document.getElementById('userChartsArea');
+    const xAxisSelect = document.getElementById('xAxisSelect');
+    const yAxisSelect = document.getElementById('yAxisSelect');
+    const yAxisContainer = document.getElementById('yAxisSelect').parentElement;
+    const xAxisLabel = document.querySelector('label[for="xAxisSelect"]');
+    const numericFields = {{ numeric_fields_json|safe }} || [];
+    const categoricalFields = {{ categorical_fields_json|safe }} || [];
+    const filterColumnSelect = document.getElementById('filterColumnSelect');
+    const sortColumnSelect = document.getElementById('sortColumnSelect');
 
-                                    {% block extra_js %}
-                                    <!-- Boxplot plugin (used only when user selects boxplot) -->
-                                    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-box-and-violin@3.0.1/build/Chart.BoxPlot.min.js"></script>
-                                    <script>
-                                            // Minimal, robust modal chart flow. Uses server-provided JSON: processed_chart_data_json, numeric_fields_json
-                                            function initCharts() {
-                                                    let processedChartData = {{ processed_chart_data_json|safe }};
-                                                    let numericFields = {{ numeric_fields_json|safe }};
+    function populateSelectors() {
+        const chartType = document.querySelector('input[name="chartType"]:checked').value;
+        
+        xAxisSelect.innerHTML = '';
+        yAxisSelect.innerHTML = '';
+        filterColumnSelect.innerHTML = '<option value="">Select Column</option>'; // Reset filter column
+        sortColumnSelect.innerHTML = '<option value="">Select Column</option>';   // Reset sort column
 
-                                                    try { if (typeof processedChartData === 'string') processedChartData = JSON.parse(processedChartData); } catch(e){ processedChartData = {}; }
-                                                    try { if (typeof numericFields === 'string') numericFields = JSON.parse(numericFields); } catch(e){ numericFields = []; }
+        let xFields = [];
+        let yFields = [];
+        let allFields = [...new Set([...numericFields, ...categoricalFields])]; // All unique fields
 
-                                                    const chartModalEl = document.getElementById('chartModal');
-                                                    const modalNextBtn = document.getElementById('modalNextBtn');
-                                                    const modalBackBtn = document.getElementById('modalBackBtn');
-                                                    const generateChartBtn = document.getElementById('generateChartBtn');
-                                                    const xAxisSelect = document.getElementById('xAxisSelect');
-                                                    const yAxisSelect = document.getElementById('yAxisSelect');
-                                                    const modalChartContainer = document.getElementById('modalChartContainer');
+        allFields.forEach(field => {
+            const filterOption = document.createElement('option');
+            filterOption.value = field;
+            filterOption.textContent = field;
+            filterColumnSelect.appendChild(filterOption);
 
-                                                    const bootstrapModal = chartModalEl ? bootstrap.Modal.getOrCreateInstance(chartModalEl) : null;
+            const sortOption = document.createElement('option');
+            sortOption.value = field;
+            sortOption.textContent = field;
+            sortColumnSelect.appendChild(sortOption);
+        });
 
-                                                    function showStep(step){
-                                                            document.querySelectorAll('.modal-step').forEach(el=>el.classList.add('d-none'));
-                                                            const stepEl = document.querySelector('.modal-step[data-step="'+step+'"]');
-                                                            if(stepEl) stepEl.classList.remove('d-none');
-                                                            if(step===1){ modalBackBtn?.classList.add('d-none'); modalNextBtn?.classList.remove('d-none'); generateChartBtn?.classList.add('d-none'); }
-                                                            else { modalBackBtn?.classList.remove('d-none'); modalNextBtn?.classList.add('d-none'); generateChartBtn?.classList.remove('d-none'); }
-                                                    }
+        if (chartType === 'line' || chartType === 'bar') {
+            xFields = categoricalFields;
+            yFields = numericFields;
+        } else if (chartType === 'scatter') {
+            xFields = numericFields;
+            yFields = numericFields;
+        } else if (chartType === 'pie') {
+            xFields = categoricalFields;
+            yFields = []; // Pie chart only needs X-axis (categorical)
+        } else if (chartType === 'boxplot' || chartType === 'histogram') {
+            xFields = numericFields;
+            yFields = []; // Boxplot and Histogram only need X-axis (numeric)
+        } else if (chartType === 'correlation') {
+            xFields = []; // Correlation matrix doesn't need explicit X/Y from user
+            yFields = [];
+        }
 
-                                                    modalNextBtn?.addEventListener('click', ()=>{
-                                                            showStep(2);
-                                                            // Populate selects when showing step 2
-                                                            if(xAxisSelect && yAxisSelect && numericFields.length > 0){
-                                                                    xAxisSelect.innerHTML = '';
-                                                                    yAxisSelect.innerHTML = '';
-                                                                    numericFields.forEach(field => {
-                                                                            const optX = document.createElement('option');
-                                                                            optX.value = field;
-                                                                            optX.textContent = field;
-                                                                            xAxisSelect.appendChild(optX);
-                                                                            const optY = document.createElement('option');
-                                                                            optY.value = field;
-                                                                            optY.textContent = field;
-                                                                            yAxisSelect.appendChild(optY);
-                                                                    });
-                                                            }
-                                                    });
-                                                    modalBackBtn?.addEventListener('click', ()=> showStep(1));
+        xFields.forEach(field => {
+            const option = document.createElement('option');
+            option.value = field;
+            option.textContent = field;
+            xAxisSelect.appendChild(option);
+        });
 
-                                                    function cleanupModalState(){ try{ document.querySelectorAll('.modal-backdrop').forEach(b=>b.remove()); document.body.classList.remove('modal-open'); }catch(e){} }
+        yFields.forEach(field => {
+            const option = document.createElement('option');
+            option.value = field;
+            option.textContent = field;
+            yAxisSelect.appendChild(option);
+        });
+    }
 
-                                                    function generateChartsFromSelection(){
-                                                            try{
-                                                                    if(!xAxisSelect || !yAxisSelect) return alert('X/Y selectors not found.');
-                                                                    const xField = xAxisSelect.value; const yField = yAxisSelect.value;
-                                                                    if(!xField||!yField){ alert('Please select X and Y fields'); return; }
+    const xAxisContainer = document.getElementById('xAxisSelect').parentElement;
+    const yAxisLabel = document.querySelector('label[for="yAxisSelect"]');
 
-                                                                    const chartType = document.querySelector('input[name="chartType"]:checked')?.value || 'line';
-                                                                    modalChartContainer.innerHTML = '';
+    function toggleYAxis() {
+        const chartType = document.querySelector('input[name="chartType"]:checked').value;
+        if (chartType === 'histogram' || chartType === 'pie' || chartType === 'boxplot') {
+            yAxisContainer.style.display = 'none';
+            xAxisContainer.style.display = 'block';
+            xAxisLabel.textContent = 'Select Field';
+        } else if (chartType === 'correlation') {
+            yAxisContainer.style.display = 'none';
+            xAxisContainer.style.display = 'none';
+        } else { // line, bar, scatter
+            yAxisContainer.style.display = 'block';
+            xAxisContainer.style.display = 'block';
+            xAxisLabel.textContent = 'Select X-axis (Field to group by)';
+            yAxisLabel.textContent = 'Select Y-axis (Field to analyze)';
+        }
+    }
 
-                                                                    // Get pre-computed data from server
-                                                                    const key = `${xField}_${yField}`;
-                                                                    const vals = processedChartData[key] || [];
+    chartModalEl.addEventListener('show.bs.modal', () => {
+        populateSelectors();
+        toggleYAxis();
+    });
 
-                                                                    if(vals.length===0){ const p=document.createElement('p'); p.className='text-muted small'; p.textContent = 'No numeric data to plot.'; modalChartContainer.appendChild(p); }
-                                                                    else{
-                                                                            const canvas=document.createElement('canvas'); modalChartContainer.appendChild(canvas); const ctx=canvas.getContext('2d');
-                                                                            if(chartType==='line'){
-                                                                                    new Chart(ctx,{ type:'line', data:{ labels: vals.map(v=>v.x), datasets:[{ label: yField, data: vals.map(v=>v.y), borderColor:'#0C4B8E', backgroundColor:'rgba(12,75,142,0.1)', fill:true }] }, options:{ responsive:true, plugins:{ tooltip:{ callbacks:{ label:function(c){ const s=vals[c.dataIndex].stats; return [`${yField} stats (${s.count} items):`, `Mean: ${s.mean.toFixed(2)}`, `Median: ${s.median.toFixed(2)}`, `Std: ${s.std.toFixed(2)}`]; } } } } } });
-                                                                            } else if(chartType==='histogram'){
-                                                                                    // For histogram, use yField values directly (assuming raw data is available, but simplified)
-                                                                                    alert('Histogram not implemented with pre-computed data. Use line chart.');
-                                                                            } else if(chartType==='boxplot'){
-                                                                                    alert('Boxplot not implemented with pre-computed data. Use line chart.');
-                                                                            }
-                                                                    }
+    document.querySelectorAll('input[name="chartType"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+            populateSelectors();
+            toggleYAxis();
+        });
+    });
 
-                                                                    // Render main chart area
-                                                                    const userArea=document.getElementById('userChartsArea'); userArea.innerHTML=''; const card=document.createElement('div'); card.className='card shadow-sm border-primary mb-4'; card.innerHTML=`<div class="card-body"><h5 class="card-title text-primary fw-bold mb-3"><i class="fa fa-chart-line"></i> ${yField} by ${xField}</h5><div class="chart-container" style="height: 400px;"></div></div>`; userArea.appendChild(card); const userCanvas=document.createElement('canvas'); card.querySelector('.chart-container').appendChild(userCanvas); new Chart(userCanvas.getContext('2d'),{ type:'line', data:{ labels: vals.map(v=>v.x), datasets:[{ label:yField, data: vals.map(v=>v.y), borderColor:'#0C4B8E', backgroundColor:'rgba(12,75,142,0.1)', fill:true }] }, options:{ responsive:true, maintainAspectRatio: false, plugins:{ tooltip:{ callbacks:{ label:function(c){ const s=vals[c.dataIndex].stats; return [`${yField} stats (${s.count} items):`, `Mean: ${s.mean.toFixed(2)}`, `Median: ${s.median.toFixed(2)}`, `Std: ${s.std.toFixed(2)}`]; } } } } } });
+    generateChartBtn.addEventListener('click', function () {
+        const chartType = document.querySelector('input[name="chartType"]:checked').value;
+        const xAxis = xAxisSelect.value;
+        const yAxis = yAxisSelect.value;
+        const fileId = {{ file.id }};
 
-                                                                    try{ bootstrapModal?.hide(); } catch(e){}
-                                                                    cleanupModalState();
-                                                            }catch(e){ console.error(e); alert('Error generating charts: '+(e.message||e)); }
-                                                    }
+        const filterColumn = filterColumnSelect.value;
+        const filterOperator = document.getElementById('filterOperatorSelect').value;
+        const filterValue = document.getElementById('filterValueInput').value;
 
-                                                    if(generateChartBtn) generateChartBtn.addEventListener('click', generateChartsFromSelection);
+        const sortColumn = sortColumnSelect.value;
+        const sortOrder = document.querySelector('input[name="sortOrder"]:checked').value;
 
-                                                    // Show initial modal state when opened
-                                                    if(chartModalEl){ chartModalEl.addEventListener('show.bs.modal', ()=> showStep(1)); }
-                                            }
+        if (!xAxis && chartType !== 'correlation') {
+            alert('Please select a field for the X-axis.');
+            return;
+        }
 
-                                            if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', initCharts); } else { initCharts(); }
-                                    </script>
-                                    {% endblock %}
+        let chartUrl = `/chart/${fileId}/?chart_type=${chartType}`;
+
+        if (xAxis) {
+            chartUrl += `&x_axis=${xAxis}`;
+        }
+
+        if (yAxisContainer.style.display !== 'none' && yAxis) {
+            chartUrl += `&y_axis=${yAxis}`;
+        }
+
+        if (filterColumn && filterValue) {
+            chartUrl += `&filter_column=${filterColumn}&filter_operator=${filterOperator}&filter_value=${filterValue}`;
+        }
+
+        if (sortColumn) {
+            chartUrl += `&sort_column=${sortColumn}&sort_order=${sortOrder}`;
+        }
+
+        const chartImage = document.createElement('img');
+        chartImage.src = chartUrl;
+        chartImage.classList.add('img-fluid');
+
+        userChartsArea.innerHTML = '';
+        userChartsArea.appendChild(chartImage);
+
+        // Handle download links
+        document.querySelectorAll('#chartModal .dropdown-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const format = this.dataset.format;
+                let downloadUrl = `/chart/${fileId}/?chart_type=${chartType}`;
+
+                if (xAxis) {
+                    downloadUrl += `&x_axis=${xAxis}`;
+                }
+
+                if (yAxisContainer.style.display !== 'none' && yAxis) {
+                    downloadUrl += `&y_axis=${yAxis}`;
+                }
+
+                if (filterColumn && filterValue) {
+                    downloadUrl += `&filter_column=${filterColumn}&filter_operator=${filterOperator}&filter_value=${filterValue}`;
+                }
+
+                if (sortColumn) {
+                    downloadUrl += `&sort_column=${sortColumn}&sort_order=${sortOrder}`;
+                }
+
+                downloadUrl += `&download=true&format=${format}`;
+                window.open(downloadUrl, '_blank');
+            });
+        });
+
+        const modal = bootstrap.Modal.getInstance(chartModalEl);
+        modal.hide();
+    });
+});
+</script>
+{% endblock %}

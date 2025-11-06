@@ -38,6 +38,7 @@ class UploadedFile(models.Model):
     size = models.BigIntegerField(default=0)
     processed_chart_data = models.JSONField(default=dict)
     numeric_fields = models.JSONField(default=list)
+    num_rows = models.BigIntegerField(default=0)
 
     class Meta:
         ordering = ['-uploaded_at']
@@ -54,6 +55,7 @@ class UploadedFile(models.Model):
 class ProcessedData(models.Model):
     uploaded_file = models.ForeignKey(UploadedFile, on_delete=models.CASCADE, related_name='processed_data')
     column_name = models.CharField(max_length=255, db_index=True)
+    data_type = models.CharField(max_length=50, default='unknown')
     value = models.FloatField()
     stats = models.JSONField(default=dict)
     created_at = models.DateTimeField(auto_now_add=True)

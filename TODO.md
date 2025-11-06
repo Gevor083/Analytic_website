@@ -1,18 +1,51 @@
-# TODO: Move Analyses Logic from JS to Python Backend
+## 🥇 Core Improvements
 
-## 1. Edit views.py
-- [ ] Add `get_numeric_fields(df)` function to identify numeric columns.
-- [ ] Add `group_and_calculate_stats(df, x_field, y_field)` function to compute grouped statistics (mean, median, std, etc.).
-- [ ] Modify `result_view` to compute processed chart data for all numeric field pairs and pass as `processed_chart_data` to template.
+* [ ] Add correlation matrix (heatmap)
+* [ ] Add outlier detection
+* [ ] Add missing values visualization
+* [ ] Add data type recognition (categorical / numeric / date)
+* [ ] Improve Upload History page
 
-## 2. Edit result.html
-- [ ] Update context to include `processed_chart_data`.
-- [ ] Modify JS in template to use `processed_chart_data` instead of raw data for chart generation.
+  * [ ] Show upload date and file size
+  * [ ] Add delete and re-analyze buttons
 
-## 3. Edit scripts.js
-- [ ] Remove analysis functions: `getNumericFields`, `groupAndCalculateStats`, `calculateGroupedStats`, etc.
-- [ ] Simplify to only handle chart rendering and UI interactions using pre-computed data.
+  * [ ] Display total uploaded files
+  * [ ] Show last upload date
+  * [ ] Show average number of rows per dataset
 
-## 4. Testing
-- [ ] Upload a sample file and verify chart generation works without client-side computation.
-- [ ] Check data serialization for numpy/pandas types.
+---
+
+## 🥈 Chart Builder Improvements
+
+* [ ] Add filter and sort options for data selection
+* [ ] Add “Download Chart” button (PNG / SVG / PDF)
+
+
+---
+
+## ⚙️ Backend Enhancements
+
+* [ ] Implement logging (error + analysis logs)
+* [ ] Use Celery (background tasks) for long analyses
+* [ ] Consider FastAPI for async performance
+* [ ] Add API endpoints to access analysis results
+
+---
+
+## 💅 UX / UI Improvements
+
+* [ ] Add data preview (first 10 rows)
+* [ ] Add tooltips for statistical metrics
+* [ ] Add dark/light mode toggle
+* [ ] Show loader animation during upload/analysis
+* [ ] Improve spacing and visual hierarchy
+
+---
+
+## 📊 Extra Features
+
+* [ ] Generate automatic PDF report (charts + stats)
+* [ ] Export results (CSV / JSON / Excel)
+
+
+---
