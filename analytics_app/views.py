@@ -130,6 +130,55 @@ def upload_view(request):
         return render(request, 'analytics_app/upload.html', {'error': 'The uploaded file is empty.'})
 
     try:
+        # Convert JSON or XLSX to CSV if necessary
+        if file_type in ['json', 'xlsx']:
+            try:
+                uploaded_file.seek(0)  # Ensure we're at the beginning of the file
+                if file_type == 'json':
+                    try:
+                        df = pd.read_json(uploaded_file, lines=True)
+                    except ValueError:
+                        # If lines=True fails, try reading as a regular JSON array/object
+                        uploaded_file.seek(0)
+                        df = pd.read_json(uploaded_file)
+                        # If it's a Series (single object), convert to DataFrame
+                        if isinstance(df, pd.Series):
+                            df = df.to_frame().T
+                elif file_type == 'xlsx':
+                    uploaded_file.seek(0)  # Ensure we're at the beginning for XLSX
+                    df = pd.read_excel(uploaded_file, engine='openpyxl')
+
+                # Validate that we got a DataFrame with data
+                if df is None or df.empty:
+                    raise ValueError("Converted file contains no data")
+
+                # Ensure we have proper column names
+                if df.columns is None or len(df.columns) == 0:
+                    raise ValueError("Converted file has no valid columns")
+
+                # Convert to CSV in memory
+                from io import StringIO
+                csv_buffer = StringIO()
+                df.to_csv(csv_buffer, index=False)
+                csv_content = csv_buffer.getvalue()
+
+                # Validate CSV content
+                if not csv_content or len(csv_content.strip()) == 0:
+                    raise ValueError("Failed to generate CSV content")
+
+                # Create a new file-like object for the CSV content
+                from django.core.files.base import ContentFile
+                csv_file = ContentFile(csv_content.encode('utf-8'), name=uploaded_file.name.rsplit('.', 1)[0] + '.csv')
+
+                # Update file and file_type
+                uploaded_file = csv_file
+                file_type = 'csv'
+                logger.info(f"Converted {filename} to CSV format successfully. Shape: {df.shape}, Columns: {list(df.columns)}")
+
+            except Exception as e:
+                logger.error(f"Error converting {filename} to CSV: {e}", exc_info=True)
+                return render(request, 'analytics_app/upload.html', {'error': f'Error converting file to CSV: {str(e)}'})
+
         obj = UploadedFile.objects.create(
             file=uploaded_file,
             file_type=file_type,

@@ -44,13 +44,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if(uploadForm) {
         uploadForm.addEventListener('submit', (e) => {
             // Show loading overlay
-            // showLoadingOverlay('');
+            showLoadingOverlay('');
 
             // Disable form submission to prevent multiple submits
             const submitBtn = uploadForm.querySelector('button[type="submit"]');
             if(submitBtn) {
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = '<span class="loader"></span> Uploading...';
+                submitBtn.innerHTML = ' Uploading...';
             }
         });
     }

@@ -1,10 +1,21 @@
-# TODO: Add "View All Data" Button and Move Filter/Sort to Full Data Page
+x# TODO: Add Conversion for JSON and XLSX to CSV in Upload
 
-## Steps to Complete:
-- [x] Create full_data_view in analytics_app/views.py: Load DataFrame, limit to 1000 rows, pass to template.
-- [x] Add URL pattern for full_data_view in analytics_app/urls.py.
-- [x] Add "View All Data" button in data preview section of analytics_app/templates/analytics_app/result.html.
-- [x] Create analytics_app/templates/analytics_app/full_data.html template: Display full data table with horizontal scroll, include filter and sort options.
-- [x] Remove filter and sort options from chart builder modal in result.html.
-- [x] Update JavaScript in result.html to remove filter/sort handling from chart modal.
-- [x] Test the new functionality: Button opens new window with full data, filter/sort work on full data page.
+## Overview
+The upload currently allows JSON and XLSX files, but processing only works for CSV. We need to convert JSON and XLSX files to CSV format during upload so that the existing processing logic can handle them.
+
+## Steps
+- [ ] Modify `upload_view` in `analytics_app/views.py` to detect JSON/XLSX files and convert them to CSV before saving.
+- [ ] Use pandas to read JSON (pd.read_json) or XLSX (pd.read_excel) and write to CSV (df.to_csv).
+- [ ] Save the converted CSV content to the UploadedFile's file field.
+- [ ] Update the file_type to 'csv' after conversion.
+- [ ] Ensure the conversion handles errors gracefully and logs them.
+- [ ] Test the conversion with sample JSON and XLSX files.
+- [ ] Update processing task if needed (though it should work since file_type becomes 'csv').
+
+## Dependencies
+- Pandas is already installed (from requirements.txt).
+- For XLSX, openpyxl is installed.
+
+## Notes
+- Conversion should be done in memory to avoid temporary files.
+- Handle large files carefully to avoid memory issues.
