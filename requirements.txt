@@ -35,6 +35,10 @@ reportlab==4.0.4
 # HTTP / Utils
 requests==2.32.4
 
+# Face Recognition
+face_recognition==1.3.0
+opencv-python==4.8.1.78
+
 # Optional: keep this if you run Jupyter notebooks sometimes
 # jupyter==1.1.1
 # notebook==7.4.7

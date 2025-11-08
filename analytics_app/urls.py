@@ -10,7 +10,7 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('register/', views.register_view, name='register'),
-    path('admin_dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
+    path('moderator_dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
     path('delete_file/<int:file_id>/', views.delete_file_view, name='delete_file'),
     path('chart/<int:file_id>/', views.generate_chart_view, name='generate_chart'),
     path('missing_values_chart/<int:file_id>/', views.missing_values_chart_view, name='missing_values_chart'),
@@ -21,4 +21,5 @@ urlpatterns = [
     path('generate_pdf_report/<int:file_id>/', views.generate_pdf_report_view, name='generate_pdf_report'),
     path('export/<int:file_id>/', views.export_results_view, name='export_results'),
     path('full_data/<int:file_id>/', views.full_data_view, name='full_data'),
+    path('face-login/', views.face_login_view, name='face_login'),
 ]

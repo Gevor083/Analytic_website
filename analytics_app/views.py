@@ -1239,3 +1239,87 @@ def full_data_view(request, file_id):
         'total_rows': total_rows,
     }
     return render(request, 'analytics_app/full_data.html', context)
+
+
+def face_login_view(request):
+    """
+    Handles face-based login for admin users.
+
+    On GET: Renders the face login page.
+    On POST: Processes the captured image, detects and encodes the face, compares to stored encodings, and logs in if matched.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        HttpResponse: Rendered face login page or redirect to admin.
+    """
+    if request.method == 'POST':
+        import face_recognition
+        import cv2
+        import numpy as np
+        import os
+        from django.contrib.auth import authenticate, login
+        from django.contrib.auth.models import User
+
+        # Get the image data from the POST request
+        image_data = request.POST.get('image')
+        if not image_data:
+            return render(request, 'analytics_app/face_login.html', {'error': 'No image data received.'})
+
+        # Decode the base64 image
+        try:
+            import base64
+            header, encoded = image_data.split(',', 1)
+            image_bytes = base64.b64decode(encoded)
+            np_arr = np.frombuffer(image_bytes, np.uint8)
+            img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+        except Exception as e:
+            logger.error(f"Error decoding image: {e}")
+            return render(request, 'analytics_app/face_login.html', {'error': 'Invalid image data.'})
+
+        # Detect faces in the image
+        face_locations = face_recognition.face_locations(img)
+        if not face_locations:
+            return render(request, 'analytics_app/face_login.html', {'error': 'No face detected in the image.'})
+
+        # Assume the first face is the one to use
+        face_encoding = face_recognition.face_encodings(img, face_locations)[0]
+
+        # Load known face encodings from faces/ directory
+        faces_dir = os.path.join(settings.BASE_DIR, 'faces')
+        known_encodings = []
+        known_usernames = []
+
+        if os.path.exists(faces_dir):
+            for filename in os.listdir(faces_dir):
+                if filename.lower().endswith(('.jpg', '.jpeg', '.png')):
+                    username = os.path.splitext(filename)[0]
+                    image_path = os.path.join(faces_dir, filename)
+                    try:
+                        known_image = face_recognition.load_image_file(image_path)
+                        known_face_locations = face_recognition.face_locations(known_image)
+                        if known_face_locations:
+                            known_encoding = face_recognition.face_encodings(known_image, known_face_locations)[0]
+                            known_encodings.append(known_encoding)
+                            known_usernames.append(username)
+                    except Exception as e:
+                        logger.error(f"Error loading face image {filename}: {e}")
+
+        # Compare faces
+        matches = face_recognition.compare_faces(known_encodings, face_encoding, tolerance=0.6)
+        face_distances = face_recognition.face_distance(known_encodings, face_encoding)
+
+        if True in matches:
+            best_match_index = np.argmin(face_distances)
+            matched_username = known_usernames[best_match_index]
+            try:
+                user = User.objects.get(username=matched_username, is_staff=True)
+                login(request, user)
+                return redirect('/admin/')
+            except User.DoesNotExist:
+                return render(request, 'analytics_app/face_login.html', {'error': 'Matched user is not an admin.'})
+        else:
+            return render(request, 'analytics_app/face_login.html', {'error': 'Face not recognized.'})
+
+    return render(request, 'analytics_app/face_login.html')

@@ -1,9 +1,30 @@
 {% extends 'analytics_app/base.html' %}
+{% load dict_extras %}
 
-{% block title %}Admin Dashboard{% endblock %}
+{% block title %}Moderator Dashboard{% endblock %}
 
 {% block content %}
 <div class="container mt-4 fade-in">
+    {% if request.user.is_superuser %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-danger mb-3">
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    <div class="me-3">
+                        <span class="bg-danger text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:48px;height:48px;font-size:1.5rem;">
+                            <i class="fa fa-cogs"></i>
+                        </span>
+                    </div>
+                    <div class="text-center">
+                        <h5 class="card-title mb-1">Admin Panel Access</h5>
+                        <p class="card-text mb-2">Access the Django Admin Panel for full system management.</p>
+                        <a href="{% url 'face_login' %}" class="btn btn-danger"><i class="fa fa-lock"></i> Face Login to Admin</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
     <div class="row mb-4">
         <div class="col-md-6">
             <div class="card shadow-sm border-primary mb-3">
@@ -59,9 +80,9 @@
                             </td>
                             <td>{{ user.email }}</td>
                             <td>
-                                {% if uploads_by_user[user] %}
+                                {% if uploads_by_user|get_item:user %}
                                     <ul class="list-unstyled mb-0">
-                                    {% for upload in uploads_by_user[user] %}
+                                    {% for upload in uploads_by_user|get_item:user %}
                                         <li class="mb-1">
                                             <i class="fa fa-file-alt text-primary"></i>
                                             <span class="fw-semibold">{{ upload.file.name|slice:'8:' }}</span>

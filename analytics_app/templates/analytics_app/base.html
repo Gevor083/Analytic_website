@@ -99,7 +99,7 @@
                             </li>
                             {% if request.user.is_staff or request.user.is_superuser %}
                                 <li class="nav-item">
-                                    <a class="nav-link" href="{% url 'admin_dashboard' %}"><i class="fa fa-user-shield"></i> Admin Dashboard</a>
+                                    <a class="nav-link" href="{% url 'admin_dashboard' %}"><i class="fa fa-user-shield"></i> Moderator Dashboard</a>
                                 </li>
                             {% endif %}
                             <li class="nav-item">
@@ -123,10 +123,10 @@
     </main>
     <footer class="text-center py-4 mt-5">
         <div class="footer-icons mb-2">
-            <a href="#"><i class="fab fa-facebook-f"></i></a>
-            <a href="#"><i class="fab fa-twitter"></i></a>
-            <a href="#"><i class="fab fa-linkedin-in"></i></a>
-            <a href="#"><i class="fab fa-github"></i></a>
+            <a href="https://www.facebook.com/groups/183239481757120/"><i class="fab fa-facebook-f"></i></a>
+            <a href="https://x.com/djangoproject"><i class="fab fa-twitter"></i></a>
+            <a href="https://www.linkedin.com/company/django-software-foundation/"><i class="fab fa-linkedin-in"></i></a>
+            <a href="https://github.com/django/django"><i class="fab fa-github"></i></a>
         </div>
         <p class="mb-0">&copy; 2025 Analytics Website &mdash; Powered by Django</p>
     </footer>

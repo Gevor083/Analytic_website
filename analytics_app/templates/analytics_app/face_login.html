@@ -1,0 +1,62 @@
+{% extends 'analytics_app/base.html' %}
+
+{% block title %}Face Login{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Face Login</h2>
+    <p>Use your face to log in as an admin user.</p>
+
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <div class="face-login-container">
+        <video id="video" width="320" height="240" autoplay></video>
+        <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+        <br>
+        <button id="capture" class="btn btn-primary">Capture Image</button>
+        <button id="login" class="btn btn-success" style="display:none;">Login</button>
+    </div>
+
+    <form id="face-login-form" method="post" style="display:none;">
+        {% csrf_token %}
+        <input type="hidden" name="image" id="image-data">
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const captureBtn = document.getElementById('capture');
+    const loginBtn = document.getElementById('login');
+    const form = document.getElementById('face-login-form');
+    const imageDataInput = document.getElementById('image-data');
+    const context = canvas.getContext('2d');
+
+    // Access the webcam
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function(stream) {
+            video.srcObject = stream;
+        })
+        .catch(function(err) {
+            alert('Error accessing webcam: ' + err.message);
+        });
+
+    // Capture image
+    captureBtn.addEventListener('click', function() {
+        context.drawImage(video, 0, 0, 320, 240);
+        const dataURL = canvas.toDataURL('image/png');
+        imageDataInput.value = dataURL;
+        captureBtn.style.display = 'none';
+        loginBtn.style.display = 'inline';
+    });
+
+    // Submit form
+    loginBtn.addEventListener('click', function() {
+        form.submit();
+    });
+});
+</script>
+{% endblock %}
