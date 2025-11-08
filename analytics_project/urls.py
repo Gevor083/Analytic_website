@@ -15,26 +15,9 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-from django.http import HttpResponse
-from analytics_app import views
-
-def health_check(request):
-    return HttpResponse('OK', status=200)
+from django.urls import path, include
 
 urlpatterns = [
-    path('health/', health_check, name='health_check'),
     path('admin/', admin.site.urls),
-    path('', views.home_view, name='home'),
-    path('upload/', views.upload_view, name='upload'),
-    path('result/<int:file_id>/', views.result_view, name='result'),
-    path('delete/<int:file_id>/', views.delete_file_view, name='delete_file'),
-    path('my_uploads/', views.my_uploads_view, name='my_uploads'),
-    path('login/', views.login_view, name='login'),
-    path('logout/', views.logout_view, name='logout'),
-    path('register/', views.register_view, name='register'),
-    path('admin/', views.admin_dashboard_view, name='admin_dashboard'),
-    path('chart/<int:file_id>/', views.generate_chart_view, name='generate_chart'),
-    path('missing_values_chart/<int:file_id>/', views.missing_values_chart_view, name='missing_values_chart'),
-    path('reanalyze/<int:file_id>/', views.reanalyze_file_view, name='reanalyze_file'),
+    path('', include('analytics_app.urls')),
 ]

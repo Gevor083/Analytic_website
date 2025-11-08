@@ -8,6 +8,42 @@
         <h1 class="mb-4 text-primary fw-bold"><i class="fa fa-chart-bar"></i> Results</h1>
         <p class="mb-4">Here you can see the results of your uploaded data.</p>
 
+        <!-- Data Preview Section -->
+        {% if data_preview %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white fw-bold">
+                <i class="fa fa-eye"></i> Data Preview (First 10 Rows)
+            </div>
+            <div class="card-body">
+                <div class="table-responsive" style="max-height: 300px; overflow-y: auto; overflow-x: auto;">
+                    <table class="table table-striped table-hover table-sm">
+                        <thead>
+                            <tr>
+                                {% for key, value in data_preview.0.items %}
+                                <th scope="col">{{ key }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in data_preview %}
+                            <tr>
+                                {% for key, value in row.items %}
+                                <td>{{ value }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'full_data' file.id %}" class="btn btn-outline-primary" target="_blank">
+                        <i class="fa fa-external-link-alt"></i> View All Data
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Modal: Chart Selector -->
         <div class="modal fade" id="chartModal" tabindex="-1" aria-labelledby="chartModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-md">
@@ -59,52 +95,7 @@
                                 <select class="form-select" id="xAxisSelect"></select>
                             </div>
 
-                            <!-- Filter Options -->
-                            <div class="mb-3">
-                                <label class="form-label">Filter Data (Optional)</label>
-                                <div class="row g-2">
-                                    <div class="col-md-5">
-                                        <select class="form-select" id="filterColumnSelect">
-                                            <option value="">Select Column</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <select class="form-select" id="filterOperatorSelect">
-                                            <option value="eq">=</option>
-                                            <option value="ne">!=</option>
-                                            <option value="gt">></option>
-                                            <option value="lt"><</option>
-                                            <option value="ge">>=</option>
-                                            <option value="le"><=</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <input type="text" class="form-control" id="filterValueInput" placeholder="Value">
-                                    </div>
-                                </div>
-                            </div>
 
-                            <!-- Sort Options -->
-                            <div class="mb-3">
-                                <label class="form-label">Sort Data (Optional)</label>
-                                <div class="row g-2">
-                                    <div class="col-md-7">
-                                        <select class="form-select" id="sortColumnSelect">
-                                            <option value="">Select Column</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-5">
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="radio" name="sortOrder" id="sortAsc" value="asc" checked>
-                                            <label class="form-check-label" for="sortAsc">Asc</label>
-                                        </div>
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="radio" name="sortOrder" id="sortDesc" value="desc">
-                                            <label class="form-check-label" for="sortDesc">Desc</label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                         </form>
                     </div>
                     <div class="modal-footer">
@@ -136,6 +127,10 @@
                         <div class="mb-3">
                 <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#chartModal">Open chart builder</button>
                 <a href="{% url 'missing_values_chart' file.id %}" class="btn btn-outline-secondary" target="_blank">Show Missing Values Chart</a>
+                <a href="{% url 'generate_pdf_report' file.id %}" class="btn btn-success" target="_blank"><i class="fa fa-file-pdf"></i> Generate PDF Report</a>
+                <button class="btn btn-info" onclick="exportResults('csv')"><i class="fa fa-download"></i> Export CSV</button>
+                <button class="btn btn-info" onclick="exportResults('json')"><i class="fa fa-download"></i> Export JSON</button>
+                <button class="btn btn-info" onclick="exportResults('excel')"><i class="fa fa-download"></i> Export Excel</button>
         </div>
                 {% for item in data %}
                         {% with analysis=analysis_data|get_item:item.column_name %}
@@ -146,37 +141,37 @@
                                                 <p class="card-text mb-3">Total: <span class="badge bg-primary fs-5">{{ item.value }}</span></p>
                                                 <ul class="list-group mb-3">
                                                                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                                <span><i class="fa fa-calculator text-primary"></i> Average</span>
+                                                                <span data-bs-toggle="tooltip" title="The average value of the column."><i class="fa fa-calculator text-primary"></i> Average</span>
                                                                 <span class="fw-bold">{{ analysis.stats.mean }}</span>
                                                         </li>
                                                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                                <span><i class="fa fa-ruler-horizontal text-primary"></i> Median</span>
+                                                                <span data-bs-toggle="tooltip" title="The middle value of the column when sorted."><i class="fa fa-ruler-horizontal text-primary"></i> Median</span>
                                                                 <span class="fw-bold">{{ analysis.stats.median }}</span>
                                                         </li>
                                                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                                <span><i class="fa fa-arrow-down text-primary"></i> Min</span>
+                                                                <span data-bs-toggle="tooltip" title="The minimum value in the column."><i class="fa fa-arrow-down text-primary"></i> Min</span>
                                                                 <span class="fw-bold">{{ analysis.stats.min }}</span>
                                                         </li>
                                                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                                <span><i class="fa fa-arrow-up text-primary"></i> Max</span>
+                                                                <span data-bs-toggle="tooltip" title="The maximum value in the column."><i class="fa fa-arrow-up text-primary"></i> Max</span>
                                                                 <span class="fw-bold">{{ analysis.stats.max }}</span>
                                                         </li>
                                                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                                <span><i class="fa fa-wave-square text-primary"></i> Std</span>
+                                                                <span data-bs-toggle="tooltip" title="The standard deviation of the column, measuring data dispersion."><i class="fa fa-wave-square text-primary"></i> Std</span>
                                                                 <span class="fw-bold">{{ analysis.stats.std }}</span>
                                                         </li>
                                                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                                <span><i class="fa fa-tag text-primary"></i> Data Type</span>
+                                                                <span data-bs-toggle="tooltip" title="The inferred data type of the column (e.g., numeric, categorical)."><i class="fa fa-tag text-primary"></i> Data Type</span>
                                                                 <span class="fw-bold">{{ analysis.data_type|capfirst }}</span>
                                                         </li>
                                                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                                <span><i class="fa fa-question-circle text-primary"></i> Missing</span>
+                                                                <span data-bs-toggle="tooltip" title="The number of missing or null values in the column."><i class="fa fa-question-circle text-primary"></i> Missing</span>
                                                                 <span class="fw-bold">{{ analysis.stats.missing }}</span>
                          
                                                         </li>
                                                         {% if analysis.stats.outliers.count > 0 %}
                                                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                                <span><i class="fa fa-exclamation-triangle text-danger"></i> Outliers</span>
+                                                                <span data-bs-toggle="tooltip" title="The number of outlier values detected in the column."><i class="fa fa-exclamation-triangle text-danger"></i> Outliers</span>
                                                                 <span class="fw-bold">{{ analysis.stats.outliers.count }}</span>
                                                         </li>
                                                         <li class="list-group-item">
@@ -202,6 +197,12 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+
     const generateChartBtn = document.getElementById('generateChartBtn');
     const chartModalEl = document.getElementById('chartModal');
     const userChartsArea = document.getElementById('userChartsArea');
@@ -211,32 +212,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const xAxisLabel = document.querySelector('label[for="xAxisSelect"]');
     const numericFields = {{ numeric_fields_json|safe }} || [];
     const categoricalFields = {{ categorical_fields_json|safe }} || [];
-    const filterColumnSelect = document.getElementById('filterColumnSelect');
-    const sortColumnSelect = document.getElementById('sortColumnSelect');
-
     function populateSelectors() {
         const chartType = document.querySelector('input[name="chartType"]:checked').value;
-        
+
         xAxisSelect.innerHTML = '';
         yAxisSelect.innerHTML = '';
-        filterColumnSelect.innerHTML = '<option value="">Select Column</option>'; // Reset filter column
-        sortColumnSelect.innerHTML = '<option value="">Select Column</option>';   // Reset sort column
-
-        let xFields = [];
-        let yFields = [];
-        let allFields = [...new Set([...numericFields, ...categoricalFields])]; // All unique fields
-
-        allFields.forEach(field => {
-            const filterOption = document.createElement('option');
-            filterOption.value = field;
-            filterOption.textContent = field;
-            filterColumnSelect.appendChild(filterOption);
-
-            const sortOption = document.createElement('option');
-            sortOption.value = field;
-            sortOption.textContent = field;
-            sortColumnSelect.appendChild(sortOption);
-        });
 
         if (chartType === 'line' || chartType === 'bar') {
             xFields = categoricalFields;
@@ -308,13 +288,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const yAxis = yAxisSelect.value;
         const fileId = {{ file.id }};
 
-        const filterColumn = filterColumnSelect.value;
-        const filterOperator = document.getElementById('filterOperatorSelect').value;
-        const filterValue = document.getElementById('filterValueInput').value;
-
-        const sortColumn = sortColumnSelect.value;
-        const sortOrder = document.querySelector('input[name="sortOrder"]:checked').value;
-
         if (!xAxis && chartType !== 'correlation') {
             alert('Please select a field for the X-axis.');
             return;
@@ -328,14 +301,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (yAxisContainer.style.display !== 'none' && yAxis) {
             chartUrl += `&y_axis=${yAxis}`;
-        }
-
-        if (filterColumn && filterValue) {
-            chartUrl += `&filter_column=${filterColumn}&filter_operator=${filterOperator}&filter_value=${filterValue}`;
-        }
-
-        if (sortColumn) {
-            chartUrl += `&sort_column=${sortColumn}&sort_order=${sortOrder}`;
         }
 
         const chartImage = document.createElement('img');
@@ -360,14 +325,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     downloadUrl += `&y_axis=${yAxis}`;
                 }
 
-                if (filterColumn && filterValue) {
-                    downloadUrl += `&filter_column=${filterColumn}&filter_operator=${filterOperator}&filter_value=${filterValue}`;
-                }
-
-                if (sortColumn) {
-                    downloadUrl += `&sort_column=${sortColumn}&sort_order=${sortOrder}`;
-                }
-
                 downloadUrl += `&download=true&format=${format}`;
                 window.open(downloadUrl, '_blank');
             });
@@ -377,5 +334,11 @@ document.addEventListener('DOMContentLoaded', function () {
         modal.hide();
     });
 });
+
+function exportResults(format) {
+    const fileId = {{ file.id }};
+    const url = `/export/${fileId}/?format=${format}`;
+    window.open(url, '_blank');
+}
 </script>
 {% endblock %}

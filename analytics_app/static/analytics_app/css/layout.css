@@ -2,7 +2,7 @@
 header {
     background-color: #0C4B8E;
     color: #fff;
-    padding: 20px 0;
+    padding: 2rem 0;
     /* Round bottom corners */
     border-bottom-left-radius: 25px;
     border-bottom-right-radius: 25px;
@@ -11,24 +11,26 @@ header {
 header nav ul.main-nav {
     display: flex;
     justify-content: center;
-    gap: 30px;
+    gap: 2rem;
+    flex-wrap: wrap;
 }
 
 header nav ul.main-nav li a {
     color: #fff;
     font-weight: bold;
-    padding: 5px 10px;
+    padding: 0.75rem 1.5rem;
     transition: background 0.3s, color 0.3s;
+    border-radius: 0.375rem;
 }
 
 header nav ul.main-nav li a:hover {
     background-color: #1565c0;
     color: #fff;
-    border-radius: 5px;
+    transform: translateY(-2px);
 }
 
 main {
-    padding: 40px;
+    padding: 3rem 2rem;
     max-width: 1200px;
     margin: 0 auto;
 }
@@ -37,10 +39,64 @@ footer {
     background-color: #0C4B8E;
     color: #fff;
     text-align: center;
-    padding: 20px;
+    padding: 2rem;
+    margin-top: 3rem;
 }
 
 /* Sections spacing */
 section {
-    margin-bottom: 50px;
+    margin-bottom: 3rem;
+}
+
+/* Container improvements */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* Row and column spacing */
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -0.75rem;
+}
+
+.col-md-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+    padding: 0 0.75rem;
+}
+
+.col-md-7 {
+    flex: 0 0 58.333333%;
+    max-width: 58.333333%;
+    padding: 0 0.75rem;
+}
+
+.col-12 {
+    flex: 0 0 100%;
+    max-width: 100%;
+    padding: 0 0.75rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .col-md-6, .col-md-7 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    main {
+        padding: 2rem 1rem;
+    }
+
+    header nav ul.main-nav {
+        gap: 1rem;
+    }
+
+    header nav ul.main-nav li a {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
 }

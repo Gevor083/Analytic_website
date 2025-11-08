@@ -38,4 +38,55 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // Loader animation for upload form
+    const uploadForm = document.querySelector('form[method="post"]');
+    if(uploadForm) {
+        uploadForm.addEventListener('submit', (e) => {
+            // Show loading overlay
+            // showLoadingOverlay('');
+
+            // Disable form submission to prevent multiple submits
+            const submitBtn = uploadForm.querySelector('button[type="submit"]');
+            if(submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="loader"></span> Uploading...';
+            }
+        });
+    }
+
+    // Loader for chart generation
+    const generateChartBtn = document.getElementById('generateChartBtn');
+    if(generateChartBtn) {
+        generateChartBtn.addEventListener('click', () => {
+            showLoadingOverlay('Generating chart...');
+        });
+    }
 });
+
+function showLoadingOverlay(message) {
+    // Remove existing overlay if any
+    const existingOverlay = document.querySelector('.loading-overlay');
+    if(existingOverlay) {
+        existingOverlay.remove();
+    }
+
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'loading-overlay';
+    overlay.innerHTML = `
+        <div style="text-align: center;">
+            <div class="loader"></div>
+            <div class="loading-text">${message}</div>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+}
+
+function hideLoadingOverlay() {
+    const overlay = document.querySelector('.loading-overlay');
+    if(overlay) {
+        overlay.remove();
+    }
+}

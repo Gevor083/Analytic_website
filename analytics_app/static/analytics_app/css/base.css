@@ -5,6 +5,7 @@ body {
     padding: 0;
     background-color: #f4f8fb;
     color: #0C4B8E;
+    line-height: 1.6;
 }
 
 a {
@@ -23,11 +24,12 @@ ul {
 }
 
 h1, h2, h3, h4, h5, h6 {
-    margin: 0;
+    margin: 0 0 1rem 0;
+    font-weight: 600;
 }
 
 p {
-    margin: 0 0 10px 0;
+    margin: 0 0 1rem 0;
 }
 
 button, .btn-primary {
@@ -35,22 +37,65 @@ button, .btn-primary {
     background-color: #0C4B8E !important;
     border-color: #0C4B8E !important;
     color: #fff !important;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: all 0.2s;
 }
 .btn-primary:hover {
     background-color: #1565c0 !important;
     border-color: #1565c0 !important;
+    transform: translateY(-1px);
 }
 
 .card {
     border: 1px solid #0C4B8E;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(12,75,142,0.08);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(12,75,142,0.1);
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
 }
 
 .table {
     border-color: #0C4B8E;
+    margin-bottom: 1rem;
 }
 .table thead {
     background-color: #0C4B8E;
     color: #fff;
+}
+
+/* Loader animation */
+.loader {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #0C4B8E;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loading-text {
+    margin-left: 10px;
+    font-size: 1.2rem;
+    color: #0C4B8E;
 }

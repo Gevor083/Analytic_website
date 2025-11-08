@@ -23,7 +23,7 @@
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="form-floating mb-3">
-                            <input type="file" name="file" id="file" class="form-control" accept=".csv,.json,.sql" placeholder="Choose a file">
+                            <input type="file" name="file" id="file" class="form-control" accept=".csv,.json,.sql" placeholder="Choose a file" required>
                             <label for="file"><i class="fa fa-file"></i> Choose a file</label>
                         </div>
                         <button type="submit" class="btn btn-primary btn-lg w-100"><i class="fa fa-upload"></i> Upload</button>

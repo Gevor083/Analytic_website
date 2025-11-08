@@ -1,0 +1,232 @@
+{% extends 'analytics_app/base.html' %}
+
+{% block title %}Full Data Preview{% endblock %}
+
+{% block content %}
+<section class="container py-5 fade-in">
+    <h1 class="mb-4 text-primary fw-bold"><i class="fa fa-table"></i> Full Data Preview</h1>
+    <p class="mb-4">Viewing up to 1000 rows of your dataset. Total rows: {{ total_rows }}, Rows displayed: {{ num_rows_displayed }}</p>
+
+    {% if processing %}
+    <div class="alert alert-info">
+        <i class="fa fa-spinner fa-spin"></i> File is still being processed. Please refresh the page.
+    </div>
+    {% elif error %}
+    <div class="alert alert-danger">
+        <i class="fa fa-exclamation-triangle"></i> Error processing file: {{ file.error_message }}
+    </div>
+    {% else %}
+    <!-- Filter and Sort Controls -->
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white fw-bold">
+            <i class="fa fa-filter"></i> Filter and Sort Options
+        </div>
+        <div class="card-body">
+            <form id="filterSortForm" class="row g-3">
+                <!-- Filter Section -->
+                <div class="col-md-4">
+                    <label for="filterColumn" class="form-label">Filter Column</label>
+                    <select class="form-select" id="filterColumn">
+                        <option value="">Select Column</option>
+                        {% for col in full_data.0.keys %}
+                        <option value="{{ col }}">{{ col }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="filterOperator" class="form-label">Operator</label>
+                    <select class="form-select" id="filterOperator">
+                        <option value="eq">=</option>
+                        <option value="ne">!=</option>
+                        <option value="gt">></option>
+                        <option value="lt"><</option>
+                        <option value="ge">>=</option>
+                        <option value="le"><=</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="filterValue" class="form-label">Value</label>
+                    <input type="text" class="form-control" id="filterValue" placeholder="Enter value">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="button" class="btn btn-primary me-2" id="applyFilterBtn">Apply Filter</button>
+                    <button type="button" class="btn btn-secondary" id="clearFilterBtn">Clear</button>
+                </div>
+
+                <!-- Sort Section -->
+                <div class="col-md-4">
+                    <label for="sortColumn" class="form-label">Sort Column</label>
+                    <select class="form-select" id="sortColumn">
+                        <option value="">Select Column</option>
+                        {% for col in full_data.0.keys %}
+                        <option value="{{ col }}">{{ col }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Order</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="sortOrder" id="sortAsc" value="asc" checked>
+                        <label class="form-check-label" for="sortAsc">Ascending</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="sortOrder" id="sortDesc" value="desc">
+                        <label class="form-check-label" for="sortDesc">Descending</label>
+                    </div>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="button" class="btn btn-primary me-2" id="applySortBtn">Apply Sort</button>
+                    <button type="button" class="btn btn-secondary" id="clearSortBtn">Clear</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="card">
+        <div class="card-header bg-primary text-white fw-bold">
+            <i class="fa fa-table"></i> Data Table
+        </div>
+        <div class="card-body">
+            <div class="table-responsive" style="max-height: 600px; overflow-y: auto; overflow-x: auto;">
+                <table class="table table-striped table-hover table-sm" id="dataTable">
+                    <thead class="table-dark">
+                        <tr>
+                            {% for key in full_data.0.keys %}
+                            <th scope="col">{{ key }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in full_data %}
+                        <tr>
+                            {% for value in row.values %}
+                            <td>{{ value }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const applyFilterBtn = document.getElementById('applyFilterBtn');
+    const clearFilterBtn = document.getElementById('clearFilterBtn');
+    const applySortBtn = document.getElementById('applySortBtn');
+    const clearSortBtn = document.getElementById('clearSortBtn');
+    const dataTable = document.getElementById('dataTable');
+    const tbody = dataTable.querySelector('tbody');
+    const originalRows = Array.from(tbody.querySelectorAll('tr'));
+
+    let currentFilter = null;
+    let currentSort = null;
+
+    function applyFiltersAndSort() {
+        let rows = [...originalRows];
+
+        // Apply filter
+        if (currentFilter) {
+            const { column, operator, value } = currentFilter;
+            const colIndex = Array.from(dataTable.querySelectorAll('th')).findIndex(th => th.textContent.trim() === column);
+
+            rows = rows.filter(row => {
+                const cell = row.cells[colIndex];
+                const cellValue = cell.textContent.trim();
+
+                // Try to parse as number for comparison
+                const numValue = parseFloat(cellValue);
+                const numFilterValue = parseFloat(value);
+                const isNumeric = !isNaN(numValue) && !isNaN(numFilterValue);
+
+                let compareValue = cellValue;
+                let filterVal = value;
+
+                if (isNumeric) {
+                    compareValue = numValue;
+                    filterVal = numFilterValue;
+                }
+
+                switch (operator) {
+                    case 'eq': return compareValue == filterVal;
+                    case 'ne': return compareValue != filterVal;
+                    case 'gt': return compareValue > filterVal;
+                    case 'lt': return compareValue < filterVal;
+                    case 'ge': return compareValue >= filterVal;
+                    case 'le': return compareValue <= filterVal;
+                    default: return true;
+                }
+            });
+        }
+
+        // Apply sort
+        if (currentSort) {
+            const { column, order } = currentSort;
+            const colIndex = Array.from(dataTable.querySelectorAll('th')).findIndex(th => th.textContent.trim() === column);
+
+            rows.sort((a, b) => {
+                const aValue = a.cells[colIndex].textContent.trim();
+                const bValue = b.cells[colIndex].textContent.trim();
+
+                // Try numeric sort first
+                const aNum = parseFloat(aValue);
+                const bNum = parseFloat(bValue);
+
+                let comparison = 0;
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    comparison = aNum - bNum;
+                } else {
+                    comparison = aValue.localeCompare(bValue);
+                }
+
+                return order === 'asc' ? comparison : -comparison;
+            });
+        }
+
+        // Update table
+        tbody.innerHTML = '';
+        rows.forEach(row => tbody.appendChild(row));
+    }
+
+    applyFilterBtn.addEventListener('click', function () {
+        const column = document.getElementById('filterColumn').value;
+        const operator = document.getElementById('filterOperator').value;
+        const value = document.getElementById('filterValue').value.trim();
+
+        if (column && value !== '') {
+            currentFilter = { column, operator, value };
+            applyFiltersAndSort();
+        }
+    });
+
+    clearFilterBtn.addEventListener('click', function () {
+        currentFilter = null;
+        document.getElementById('filterColumn').value = '';
+        document.getElementById('filterValue').value = '';
+        applyFiltersAndSort();
+    });
+
+    applySortBtn.addEventListener('click', function () {
+        const column = document.getElementById('sortColumn').value;
+        const order = document.querySelector('input[name="sortOrder"]:checked').value;
+
+        if (column) {
+            currentSort = { column, order };
+            applyFiltersAndSort();
+        }
+    });
+
+    clearSortBtn.addEventListener('click', function () {
+        currentSort = null;
+        document.getElementById('sortColumn').value = '';
+        applyFiltersAndSort();
+    });
+});
+</script>
+{% endblock %}

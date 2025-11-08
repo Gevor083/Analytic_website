@@ -1,3 +1,11 @@
+"""
+Django views for the analytics app.
+
+This module contains all the view functions for handling HTTP requests and responses
+in the analytics application. It includes views for file upload, result display,
+chart generation, user authentication, and API endpoints.
+"""
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from .models import UploadedFile, ProcessedData
@@ -69,11 +77,32 @@ logger = logging.getLogger(__name__)
 
 # Գլխավոր էջ
 def home_view(request):
+    """
+    Renders the home page of the analytics application.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        HttpResponse: Rendered home page template.
+    """
     return render(request, 'analytics_app/index.html')
 
 
 # Upload էջ
 def upload_view(request):
+    """
+    Handles file upload requests.
+
+    Validates the uploaded file for type, size, and emptiness. Creates an UploadedFile
+    instance and queues it for processing. Redirects to the result page upon success.
+
+    Args:
+        request: The HTTP request object containing the uploaded file.
+
+    Returns:
+        HttpResponse: Rendered upload page with errors or redirect to result page.
+    """
     if request.method != 'POST':
         return render(request, 'analytics_app/upload.html')
 
@@ -87,13 +116,13 @@ def upload_view(request):
     file_type = next((ext for ext in settings.ALLOWED_FILE_TYPES if filename.endswith(f'.{ext}')), None)
     if not file_type:
         logger.warning(f"Unsupported file type uploaded: {filename}")
-        return render(request, 'analytics_app/upload.html', 
+        return render(request, 'analytics_app/upload.html',
                      {'error': f'Unsupported file type. Allowed types: {", ".join(settings.ALLOWED_FILE_TYPES)}'})
 
     # Validate file size
     if uploaded_file.size > settings.MAX_UPLOAD_SIZE:
         logger.warning(f"File too large uploaded: {filename} ({uploaded_file.size} bytes)")
-        return render(request, 'analytics_app/upload.html', 
+        return render(request, 'analytics_app/upload.html',
                      {'error': f'File too large. Maximum size is {settings.MAX_UPLOAD_SIZE/(1024*1024)}MB'})
 
     if uploaded_file.size == 0:
@@ -137,6 +166,16 @@ def upload_view(request):
 
 # Արդյունքների էջ
 def result_view(request, file_id):
+    """
+    Displays the result page for a processed file.
+
+    Args:
+        request: The HTTP request object.
+        file_id: The ID of the uploaded file.
+
+    Returns:
+        HttpResponse: Rendered result page.
+    """
     file_obj = get_object_or_404(UploadedFile, id=file_id)
     
     if not file_obj.processed and not file_obj.error_message:
@@ -199,8 +238,12 @@ def result_view(request, file_id):
     try:
         df = pd.read_csv(file_obj.file.path)
         categorical_fields = get_categorical_fields(df)
+        
+        # Get data preview (first 10 rows)
+        data_preview = df.head(10).to_dict(orient='records')
     except Exception:
         categorical_fields = []
+        data_preview = [] # Ensure data_preview is always defined
 
     processed_chart_data_json = json.dumps(make_json_serializable(processed_chart_data))
     numeric_fields_json = json.dumps(numeric_fields)
@@ -218,13 +261,24 @@ def result_view(request, file_id):
         'analysis_data_json': analysis_data_json,
         'processed_chart_data_json': processed_chart_data_json,
         'numeric_fields_json': numeric_fields_json,
-        'categorical_fields_json': categorical_fields_json
+        'categorical_fields_json': categorical_fields_json,
+        'data_preview': data_preview, # Add data_preview to context
     }
     context['show_modal'] = request.GET.get('show_modal', '0')
     return render(request, 'analytics_app/result.html', context)
 
 
 def delete_file_view(request, file_id):
+    """
+    Deletes the uploaded file and its associated data.
+
+    Args:
+        request: The HTTP request object.
+        file_id: The ID of the file to delete.
+
+    Returns:
+        HttpResponse: Redirect to my_uploads page.
+    """
     file_obj = get_object_or_404(UploadedFile, id=file_id)
     if request.method == 'POST':
         # Delete the file from storage
@@ -242,6 +296,15 @@ def delete_file_view(request, file_id):
 
 @login_required
 def my_uploads_view(request):
+    """
+    Displays the user's uploaded files with statistics.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        HttpResponse: Rendered my_uploads page.
+    """
     uploads = UploadedFile.objects.filter(user=request.user).order_by('-uploaded_at')
     total_uploaded_files = uploads.count()
     last_upload_date = uploads.first().uploaded_at if uploads.exists() else None
@@ -261,6 +324,15 @@ def my_uploads_view(request):
 
 
 def login_view(request):
+    """
+    Handles user login.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        HttpResponse: Redirect to home or rendered login page.
+    """
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -274,11 +346,29 @@ def login_view(request):
 
 
 def logout_view(request):
+    """
+    Logs out the user and redirects to login page.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        HttpResponse: Redirect to login page.
+    """
     logout(request)
     return redirect('login')
 
 
 def register_view(request):
+    """
+    Handles user registration.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        HttpResponse: Redirect to home or rendered register page.
+    """
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
         email = request.POST.get('email', '').strip()
@@ -309,6 +399,15 @@ def register_view(request):
 
 @user_passes_test(lambda u: u.is_staff or u.is_superuser)
 def admin_dashboard_view(request):
+    """
+    Displays the admin dashboard with user and upload statistics.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        HttpResponse: Rendered admin dashboard page.
+    """
     from django.contrib.auth.models import User
     from .models import UploadedFile
     users = User.objects.all()
@@ -327,7 +426,7 @@ def admin_dashboard_view(request):
 
 
 # Health check used by docker-compose and monitoring
-from django.http import HttpResponse, FileResponse
+from django.http import HttpResponse, FileResponse, JsonResponse
 from django.db import connections
 from django.db.utils import OperationalError
 import matplotlib.pyplot as plt
@@ -340,6 +439,15 @@ except Exception:
     RedisConnectionError = Exception
 
 def health_check(request):
+    """
+    Performs health checks for database and Redis.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        HttpResponse: OK or error status.
+    """
     # Check database connection
     try:
         connections['default'].ensure_connection()
@@ -373,6 +481,25 @@ def get_numeric_fields(df):
         except Exception:
             continue
     return numeric_fields
+
+
+def detect_outliers_iqr(series):
+    """
+    Detects outliers in a pandas Series using the Interquartile Range (IQR) method.
+    Returns a list of outlier values.
+    """
+    if not pd.api.types.is_numeric_dtype(series):
+        return []
+
+    Q1 = series.quantile(0.25)
+    Q3 = series.quantile(0.75)
+    IQR = Q3 - Q1
+
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+
+    outliers = series[(series < lower_bound) | (series > upper_bound)].tolist()
+    return outliers
 
 
 def group_and_calculate_stats(df, x_field, y_field):
@@ -440,6 +567,18 @@ def get_categorical_fields(df, max_unique=20):
     return categorical_fields
 
 def apply_filter(df, filter_column, filter_operator, filter_value):
+    """
+    Applies a filter to the DataFrame based on column, operator, and value.
+
+    Args:
+        df: The pandas DataFrame.
+        filter_column: The column to filter.
+        filter_operator: The operator (eq, ne, gt, etc.).
+        filter_value: The value to filter by.
+
+    Returns:
+        DataFrame: The filtered DataFrame.
+    """
     if not filter_column or not filter_operator or not filter_value:
         return df
 
@@ -472,6 +611,17 @@ def apply_filter(df, filter_column, filter_operator, filter_value):
     return df
 
 def apply_sort(df, sort_column, sort_order):
+    """
+    Sorts the DataFrame by the specified column and order.
+
+    Args:
+        df: The pandas DataFrame.
+        sort_column: The column to sort by.
+        sort_order: 'asc' or 'desc'.
+
+    Returns:
+        DataFrame: The sorted DataFrame.
+    """
     if not sort_column or sort_column not in df.columns:
         return df
 
@@ -480,6 +630,16 @@ def apply_sort(df, sort_column, sort_order):
     return df
 
 def generate_chart_view(request, file_id):
+    """
+    Generates and returns a chart image based on the file data.
+
+    Args:
+        request: The HTTP request object.
+        file_id: The ID of the uploaded file.
+
+    Returns:
+        HttpResponse: The chart image or error.
+    """
     logger.info(f"Chart generation requested for file_id: {file_id} with params: {request.GET}")
     file_obj = get_object_or_404(UploadedFile, id=file_id)
     chart_type = request.GET.get('chart_type', 'line')
@@ -666,6 +826,16 @@ def generate_chart_view(request, file_id):
     return HttpResponse(buf.getvalue(), content_type=content_type)
 
 def missing_values_chart_view(request, file_id):
+    """
+    Generates a chart showing missing values per column.
+
+    Args:
+        request: The HTTP request object.
+        file_id: The ID of the uploaded file.
+
+    Returns:
+        HttpResponse: The chart image.
+    """
     file_obj = get_object_or_404(UploadedFile, id=file_id)
 
     try:
@@ -695,6 +865,16 @@ def missing_values_chart_view(request, file_id):
 
 @login_required
 def reanalyze_file_view(request, file_id):
+    """
+    Re-analyzes the uploaded file by resetting and re-queuing processing.
+
+    Args:
+        request: The HTTP request object.
+        file_id: The ID of the file to re-analyze.
+
+    Returns:
+        HttpResponse: Redirect to my_uploads.
+    """
     file_obj = get_object_or_404(UploadedFile, id=file_id, user=request.user)
     
     # Reset processing status
@@ -714,3 +894,299 @@ def reanalyze_file_view(request, file_id):
         messages.error(request, f'Error re-analyzing file: {str(e)}')
 
     return redirect('my_uploads')
+
+
+@login_required
+def api_analysis_results(request, file_id):
+    try:
+        file_obj = get_object_or_404(UploadedFile, id=file_id, user=request.user)
+    except Exception:
+        return JsonResponse({'error': 'File not found or you do not have permission to access it.'}, status=404)
+
+    if not file_obj.processed:
+        return JsonResponse({'message': 'File is still being processed.'}, status=202)
+    
+    if file_obj.error_message:
+        return JsonResponse({'error': f'Error processing file: {file_obj.error_message}'}, status=500)
+
+    processed_data_qs = ProcessedData.objects.filter(uploaded_file=file_obj)
+    
+    # Serialize UploadedFile data
+    file_data = {
+        'id': file_obj.id,
+        'file_name': file_obj.file.name.split('/')[-1],
+        'uploaded_at': file_obj.uploaded_at.isoformat(),
+        'file_type': file_obj.file_type,
+        'processed': file_obj.processed,
+        'error_message': file_obj.error_message,
+        'num_rows': file_obj.num_rows,
+        'num_columns': file_obj.num_columns,
+        'file_size': file_obj.file.size,
+        'processed_chart_data': file_obj.processed_chart_data,
+        'numeric_fields': file_obj.numeric_fields,
+    }
+
+    # Serialize ProcessedData
+    analysis_results = []
+    for pd_obj in processed_data_qs:
+        analysis_results.append({
+            'column_name': pd_obj.column_name,
+            'data_type': pd_obj.data_type,
+            'stats': pd_obj.stats,
+        })
+
+    response_data = {
+        'file_info': file_data,
+        'analysis_results': analysis_results,
+    }
+
+    return JsonResponse(response_data)
+
+@login_required
+def api_all_files(request):
+    """
+    Returns a JSON list of all files uploaded by the user.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        JsonResponse: List of files.
+    """
+    files = UploadedFile.objects.filter(user=request.user).order_by('-uploaded_at')
+
+    files_data = []
+    for file_obj in files:
+        files_data.append({
+            'id': file_obj.id,
+            'file_name': file_obj.file.name.split('/')[-1],
+            'uploaded_at': file_obj.uploaded_at.isoformat(),
+            'file_type': file_obj.file_type,
+            'processed': file_obj.processed,
+            'error_message': file_obj.error_message,
+            'num_rows': file_obj.num_rows,
+            'num_columns': file_obj.num_columns,
+            'file_size': file_obj.file.size,
+        })
+
+    return JsonResponse({'files': files_data})
+
+
+@login_required
+def generate_pdf_report_view(request, file_id):
+    """
+    Generates a PDF report for the analyzed file.
+
+    Args:
+        request: The HTTP request object.
+        file_id: The ID of the uploaded file.
+
+    Returns:
+        HttpResponse: The PDF file or error.
+    """
+    file_obj = get_object_or_404(UploadedFile, id=file_id)
+
+    if not file_obj.processed:
+        return HttpResponse("File is still being processed.", status=202)
+
+    if file_obj.error_message:
+        return HttpResponse(f"Error processing file: {file_obj.error_message}", status=500)
+
+    try:
+        from reportlab.lib.pagesizes import letter
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+        from reportlab.lib import colors
+        import io
+
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        styles = getSampleStyleSheet()
+        story = []
+
+        # Title
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=24,
+            spaceAfter=30,
+        )
+        story.append(Paragraph(f"Analytics Report for {file_obj.file.name.split('/')[-1]}", title_style))
+        story.append(Spacer(1, 12))
+
+        # File Info
+        story.append(Paragraph("File Information", styles['Heading2']))
+        # Get number of columns from the dataframe
+        try:
+            df = pd.read_csv(file_obj.file.path)
+            num_columns = len(df.columns)
+        except Exception:
+            num_columns = "Unknown"
+        file_info = [
+            ["File Name", file_obj.file.name.split('/')[-1]],
+            ["Uploaded At", file_obj.uploaded_at.strftime('%Y-%m-%d %H:%M:%S')],
+            ["File Type", file_obj.file_type],
+            ["Number of Rows", str(file_obj.num_rows)],
+            ["Number of Columns", str(num_columns)],
+        ]
+        table = Table(file_info)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        story.append(table)
+        story.append(Spacer(1, 12))
+
+        # Analysis Results
+        story.append(Paragraph("Analysis Results", styles['Heading2']))
+        processed_data = ProcessedData.objects.filter(uploaded_file=file_obj)
+
+        for pd_obj in processed_data:
+            story.append(Paragraph(f"Column: {pd_obj.column_name} ({pd_obj.data_type})", styles['Heading3']))
+            stats = pd_obj.stats
+            if isinstance(stats, str):
+                try:
+                    stats = json.loads(stats)
+                except:
+                    stats = {}
+
+            stats_table_data = [["Statistic", "Value"]]
+            for key, value in stats.items():
+                if key == 'outliers':
+                    if isinstance(value, dict) and 'values' in value:
+                        outlier_values = value['values'][:5]  # Limit to first 5 outliers
+                        stats_table_data.append([key, f"{value['count']} outliers: {', '.join(map(str, outlier_values))}"])
+                    else:
+                        stats_table_data.append([key, str(value)])
+                else:
+                    stats_table_data.append([key, str(value)])
+
+            stats_table = Table(stats_table_data)
+            stats_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            story.append(stats_table)
+            story.append(Spacer(1, 12))
+
+        # Charts (if available)
+        story.append(Paragraph("Charts", styles['Heading2']))
+        # Note: Adding actual chart images would require generating them separately
+        # For now, we'll just mention that charts are available in the web interface
+        story.append(Paragraph("Charts are available in the web interface. Visit the results page to view and download charts.", styles['Normal']))
+
+        doc.build(story)
+        buffer.seek(0)
+
+        response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="analytics_report_{file_id}.pdf"'
+        return response
+
+    except Exception as e:
+        logger.error(f"Error generating PDF report for file {file_id}: {e}", exc_info=True)
+        return HttpResponse(f"Error generating PDF: {e}", status=500)
+
+
+@login_required
+def export_results_view(request, file_id):
+    """
+    Exports the file data in the specified format.
+
+    Args:
+        request: The HTTP request object.
+        file_id: The ID of the uploaded file.
+
+    Returns:
+        HttpResponse: The exported file.
+    """
+    file_obj = get_object_or_404(UploadedFile, id=file_id, user=request.user)
+
+    if not file_obj.processed:
+        return HttpResponse("File is still being processed.", status=202)
+
+    if file_obj.error_message:
+        return HttpResponse(f"Error processing file: {file_obj.error_message}", status=500)
+
+    format_type = request.GET.get('format', 'csv')
+
+    try:
+        df = pd.read_csv(file_obj.file.path)
+    except Exception as e:
+        return HttpResponse(f"Error reading file: {e}", status=500)
+
+    buffer = io.BytesIO()
+
+    if format_type == 'csv':
+        df.to_csv(buffer, index=False)
+        content_type = 'text/csv'
+        extension = 'csv'
+    elif format_type == 'json':
+        df.to_json(buffer, orient='records')
+        content_type = 'application/json'
+        extension = 'json'
+    elif format_type == 'excel':
+        df.to_excel(buffer, index=False, engine='openpyxl')
+        content_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        extension = 'xlsx'
+    else:
+        return HttpResponse("Invalid format specified.", status=400)
+
+    buffer.seek(0)
+
+    response = HttpResponse(buffer.getvalue(), content_type=content_type)
+    response['Content-Disposition'] = f'attachment; filename="exported_data_{file_id}.{extension}"'
+    return response
+
+
+def full_data_view(request, file_id):
+    """
+    Displays the full data of the uploaded file, limited to 1000 rows.
+
+    Args:
+        request: The HTTP request object.
+        file_id: The ID of the uploaded file.
+
+    Returns:
+        HttpResponse: Rendered full data page.
+    """
+    file_obj = get_object_or_404(UploadedFile, id=file_id)
+
+    if not file_obj.processed:
+        messages.info(request, 'File is still being processed. Please refresh the page.')
+        return render(request, 'analytics_app/full_data.html', {'file': file_obj, 'processing': True})
+
+    if file_obj.error_message:
+        messages.error(request, f'Error processing file: {file_obj.error_message}')
+        return render(request, 'analytics_app/full_data.html', {'file': file_obj, 'error': True})
+
+    try:
+        df = pd.read_csv(file_obj.file.path)
+        # Limit to 1000 rows
+        full_data = df.head(1000).to_dict(orient='records')
+        num_rows_displayed = len(full_data)
+        total_rows = len(df)
+    except Exception as e:
+        logger.error(f"Error reading file for full data view: {e}", exc_info=True)
+        full_data = []
+        num_rows_displayed = 0
+        total_rows = 0
+
+    context = {
+        'file': file_obj,
+        'full_data': full_data,
+        'num_rows_displayed': num_rows_displayed,
+        'total_rows': total_rows,
+    }
+    return render(request, 'analytics_app/full_data.html', context)

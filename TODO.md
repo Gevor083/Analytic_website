@@ -1,51 +1,10 @@
-## 🥇 Core Improvements
+# TODO: Add "View All Data" Button and Move Filter/Sort to Full Data Page
 
-* [ ] Add correlation matrix (heatmap)
-* [ ] Add outlier detection
-* [ ] Add missing values visualization
-* [ ] Add data type recognition (categorical / numeric / date)
-* [ ] Improve Upload History page
-
-  * [ ] Show upload date and file size
-  * [ ] Add delete and re-analyze buttons
-
-  * [ ] Display total uploaded files
-  * [ ] Show last upload date
-  * [ ] Show average number of rows per dataset
-
----
-
-## 🥈 Chart Builder Improvements
-
-* [ ] Add filter and sort options for data selection
-* [ ] Add “Download Chart” button (PNG / SVG / PDF)
-
-
----
-
-## ⚙️ Backend Enhancements
-
-* [ ] Implement logging (error + analysis logs)
-* [ ] Use Celery (background tasks) for long analyses
-* [ ] Consider FastAPI for async performance
-* [ ] Add API endpoints to access analysis results
-
----
-
-## 💅 UX / UI Improvements
-
-* [ ] Add data preview (first 10 rows)
-* [ ] Add tooltips for statistical metrics
-* [ ] Add dark/light mode toggle
-* [ ] Show loader animation during upload/analysis
-* [ ] Improve spacing and visual hierarchy
-
----
-
-## 📊 Extra Features
-
-* [ ] Generate automatic PDF report (charts + stats)
-* [ ] Export results (CSV / JSON / Excel)
-
-
----
+## Steps to Complete:
+- [x] Create full_data_view in analytics_app/views.py: Load DataFrame, limit to 1000 rows, pass to template.
+- [x] Add URL pattern for full_data_view in analytics_app/urls.py.
+- [x] Add "View All Data" button in data preview section of analytics_app/templates/analytics_app/result.html.
+- [x] Create analytics_app/templates/analytics_app/full_data.html template: Display full data table with horizontal scroll, include filter and sort options.
+- [x] Remove filter and sort options from chart builder modal in result.html.
+- [x] Update JavaScript in result.html to remove filter/sort handling from chart modal.
+- [x] Test the new functionality: Button opens new window with full data, filter/sort work on full data page.

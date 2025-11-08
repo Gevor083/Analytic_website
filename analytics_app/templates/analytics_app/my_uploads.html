@@ -19,6 +19,35 @@
                         <p class="text-muted">Average rows per dataset: <span class="badge bg-info">{{ average_rows_per_dataset|floatformat:2 }}</span></p>
                         {% endif %}
                     </div>
+
+                    <!-- Upload Statistics -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-primary">{{ total_uploaded_files }}</h5>
+                                    <p class="card-text">Total Files Uploaded</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-primary">{{ last_upload_date|date:"M d, Y" }}</h5>
+                                    <p class="card-text">Last Upload Date</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-primary">{{ average_rows_per_dataset|floatformat:0 }}</h5>
+                                    <p class="card-text">Avg Rows per Dataset</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {% if uploads %}
                         <div class="table-responsive">
                             <table class="table table-striped table-bordered align-middle rounded">
