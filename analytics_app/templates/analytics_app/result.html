@@ -307,6 +307,17 @@ document.addEventListener('DOMContentLoaded', function () {
         chartImage.src = chartUrl;
         chartImage.classList.add('img-fluid');
 
+        // Hide loading overlay when image loads successfully
+        chartImage.addEventListener('load', function() {
+            hideLoadingOverlay();
+        });
+
+        // Hide loading overlay on error as well
+        chartImage.addEventListener('error', function() {
+            hideLoadingOverlay();
+            alert('Failed to generate chart. Please try again.');
+        });
+
         userChartsArea.innerHTML = '';
         userChartsArea.appendChild(chartImage);
 
