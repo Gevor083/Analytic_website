@@ -78,7 +78,7 @@
                                             </form>
                                             <form action="{% url 'reanalyze_file' file.id %}" method="post" class="d-inline ms-2">
                                                 {% csrf_token %}
-                                                <button type="submit" class="btn btn-primary btn-sm" title="Re-analyze File">
+                                                <button type="submit" class="btn btn-primary btn-sm" title="Re-analyze File" onclick="return confirm('Are you sure you want to re-analyze this file?');">
                                                     <i class="fa fa-sync-alt"></i>
                                                 </button>
                                             </form>

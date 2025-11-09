@@ -11,6 +11,7 @@ from django.urls import reverse
 from .models import UploadedFile, ProcessedData
 import pandas as pd
 import json
+import csv
 from django.contrib import messages
 import os
 from django.conf import settings
@@ -135,32 +136,42 @@ def upload_view(request):
             try:
                 uploaded_file.seek(0)  # Ensure we're at the beginning of the file
                 if file_type == 'json':
-                    try:
-                        df = pd.read_json(uploaded_file, lines=True)
-                    except ValueError:
-                        # If lines=True fails, try reading as a regular JSON array/object
-                        uploaded_file.seek(0)
-                        df = pd.read_json(uploaded_file)
-                        # If it's a Series (single object), convert to DataFrame
-                        if isinstance(df, pd.Series):
-                            df = df.to_frame().T
+                    # Read JSON file
+                    data = json.load(uploaded_file)
+                    # If your JSON has a nested list inside (like "users"), extract it:
+                    if isinstance(data, dict):
+                        # Check if it's a single object or has nested list
+                        if isinstance(data, dict) and len(data) == 1 and isinstance(list(data.values())[0], list):
+                            # Extract nested list
+                            data = data[list(data.keys())[0]]
+                        else:
+                            # Single object, wrap in list
+                            data = [data]
+                    # Now write CSV
+                    from io import StringIO
+                    csv_buffer = StringIO()
+                    writer = csv.DictWriter(csv_buffer, fieldnames=data[0].keys())
+                    writer.writeheader()
+                    writer.writerows(data)
+                    csv_content = csv_buffer.getvalue()
+
                 elif file_type == 'xlsx':
                     uploaded_file.seek(0)  # Ensure we're at the beginning for XLSX
                     df = pd.read_excel(uploaded_file, engine='openpyxl')
 
-                # Validate that we got a DataFrame with data
-                if df is None or df.empty:
-                    raise ValueError("Converted file contains no data")
+                    # Validate that we got a DataFrame with data
+                    if df is None or df.empty:
+                        raise ValueError("Converted file contains no data")
 
-                # Ensure we have proper column names
-                if df.columns is None or len(df.columns) == 0:
-                    raise ValueError("Converted file has no valid columns")
+                    # Ensure we have proper column names
+                    if df.columns is None or len(df.columns) == 0:
+                        raise ValueError("Converted file has no valid columns")
 
-                # Convert to CSV in memory
-                from io import StringIO
-                csv_buffer = StringIO()
-                df.to_csv(csv_buffer, index=False)
-                csv_content = csv_buffer.getvalue()
+                    # Convert to CSV in memory
+                    from io import StringIO
+                    csv_buffer = StringIO()
+                    df.to_csv(csv_buffer, index=False)
+                    csv_content = csv_buffer.getvalue()
 
                 # Validate CSV content
                 if not csv_content or len(csv_content.strip()) == 0:
@@ -173,7 +184,7 @@ def upload_view(request):
                 # Update file and file_type
                 uploaded_file = csv_file
                 file_type = 'csv'
-                logger.info(f"Converted {filename} to CSV format successfully. Shape: {df.shape}, Columns: {list(df.columns)}")
+                logger.info(f"Converted {filename} to CSV format successfully.")
 
             except Exception as e:
                 logger.error(f"Error converting {filename} to CSV: {e}", exc_info=True)
@@ -206,7 +217,7 @@ def upload_view(request):
         messages.success(request, 'File uploaded successfully! Processing has started...')
 
         # Redirect straight away; processing runs in background or was executed inline above
-        return redirect(f"{reverse('result', kwargs={'file_id': obj.id})}?show_modal=1")
+        return redirect(reverse('result', kwargs={'file_id': obj.id}))
 
     except Exception as e:
         logger.error(f"Unexpected error during file upload: {e}", exc_info=True)
@@ -922,10 +933,10 @@ def reanalyze_file_view(request, file_id):
         file_id: The ID of the file to re-analyze.
 
     Returns:
-        HttpResponse: Redirect to my_uploads.
+        HttpResponse: Redirect to result page.
     """
     file_obj = get_object_or_404(UploadedFile, id=file_id, user=request.user)
-    
+
     # Reset processing status
     file_obj.processed = False
     file_obj.error_message = None
@@ -942,7 +953,8 @@ def reanalyze_file_view(request, file_id):
     except Exception as e:
         messages.error(request, f'Error re-analyzing file: {str(e)}')
 
-    return redirect('my_uploads')
+    # Redirect to result page
+    return redirect(reverse('result', kwargs={'file_id': file_id}))
 
 
 @login_required

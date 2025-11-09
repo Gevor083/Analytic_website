@@ -118,6 +118,7 @@ def process_uploaded_file(file_id):
 
         # Read the entire file first to infer data types and get all columns
         full_df = None
+        csv_path = None
         if file_type == 'csv':
             if use_path:
                 full_df = pd.read_csv(file_obj.file.path)
@@ -126,17 +127,39 @@ def process_uploaded_file(file_id):
                 file_obj.file.seek(0)
                 full_df = pd.read_csv(file_obj.file)
         elif file_type == 'json':
+            # Read JSON directly - no need to convert to CSV for processing
             if use_path:
-                full_df = pd.read_json(file_obj.file.path, lines=True)
+                try:
+                    full_df = pd.read_json(file_obj.file.path, lines=True)
+                except ValueError:
+                    # If lines=True fails, try reading as a regular JSON array/object
+                    full_df = pd.read_json(file_obj.file.path)
+                    # If it's a Series (single object), convert to DataFrame
+                    if isinstance(full_df, pd.Series):
+                        full_df = full_df.to_frame().T
             else:
                 file_obj.file.open('rb')
                 file_obj.file.seek(0)
-                full_df = pd.read_json(file_obj.file, lines=True)
+                try:
+                    full_df = pd.read_json(file_obj.file, lines=True)
+                except ValueError:
+                    # If lines=True fails, try reading as a regular JSON array/object
+                    file_obj.file.seek(0)
+                    full_df = pd.read_json(file_obj.file)
+                    # If it's a Series (single object), convert to DataFrame
+                    if isinstance(full_df, pd.Series):
+                        full_df = full_df.to_frame().T
         else:
             raise ValueError(f"Unsupported file type: {file_type}")
 
         if full_df is None or full_df.empty:
-            raise ValueError("Could not read file or file is empty.")
+            # For empty files, mark as processed with no data
+            file_obj.processed_chart_data = {}
+            file_obj.numeric_fields = []
+            file_obj.num_rows = 0
+            file_obj.processed = True
+            file_obj.save()
+            return
 
         column_data_types = {col: get_series_data_type(full_df[col]) for col in full_df.columns}
 
@@ -150,13 +173,9 @@ def process_uploaded_file(file_id):
             else:
                 df_iterator = pd.read_csv(file_obj.file, chunksize=chunk_size)
         elif file_type == 'json':
-            try:
-                if use_path:
-                    df_iterator = pd.read_json(file_obj.file.path, lines=True, chunksize=chunk_size)
-                else:
-                    df_iterator = pd.read_json(file_obj.file, lines=True, chunksize=chunk_size)
-            except TypeError:
-                df_iterator = [full_df] # Fallback to full_df if chunking not supported
+            # For JSON, since we already have full_df, use it as single chunk
+            # Chunking JSON is complex and not always supported
+            df_iterator = [full_df]
         else:
             raise ValueError(f"Unsupported file type: {file_type}")
 
@@ -285,43 +304,56 @@ def process_uploaded_file(file_id):
         processed_chart_data = {}
         numeric_fields = list(column_stats.keys())[:10]  # Use the columns we already processed, limit to 10
 
-        if column_stats:
-            # For large files, skip chart data computation to avoid memory and DB issues
-            # Estimate file size based on chunk processing
-            estimated_rows = sum(stats['count'] + stats['missing'] for stats in column_stats.values())
-            max_rows_for_chart = 50000  # Limit chart computation to files with <= 50k rows
+        # Estimate file size based on chunk processing
+        estimated_rows = sum(stats['count'] + stats['missing'] for stats in column_stats.values()) if column_stats else 0
+        max_rows_for_chart = 50000  # Limit chart computation to files with <= 50k rows
 
-            if estimated_rows <= max_rows_for_chart:
-                try:
-                    if file_type == 'csv':
-                        if use_path:
-                            df = pd.read_csv(file_obj.file.path)
-                        else:
-                            file_obj.file.open('rb')
-                            file_obj.file.seek(0)
-                            df = pd.read_csv(file_obj.file)
-                    elif file_type == 'json':
-                        if use_path:
-                            df = pd.read_json(file_obj.file.path, lines=True)
-                        else:
-                            file_obj.file.open('rb')
-                            file_obj.file.seek(0)
-                            df = pd.read_json(file_obj.file, lines=True)
+        if column_stats and estimated_rows <= max_rows_for_chart:
+            try:
+                if file_type == 'csv':
+                    if use_path:
+                        df = pd.read_csv(file_obj.file.path)
                     else:
-                        df = pd.DataFrame()
+                        file_obj.file.open('rb')
+                        file_obj.file.seek(0)
+                        df = pd.read_csv(file_obj.file)
+                elif file_type == 'json':
+                    if use_path:
+                        try:
+                            df = pd.read_json(file_obj.file.path, lines=True)
+                        except ValueError:
+                            # If lines=True fails, try reading as a regular JSON array/object
+                            df = pd.read_json(file_obj.file.path)
+                            # If it's a Series (single object), convert to DataFrame
+                            if isinstance(df, pd.Series):
+                                df = df.to_frame().T
+                    else:
+                        file_obj.file.open('rb')
+                        file_obj.file.seek(0)
+                        try:
+                            df = pd.read_json(file_obj.file, lines=True)
+                        except ValueError:
+                            # If lines=True fails, try reading as a regular JSON array/object
+                            file_obj.file.seek(0)
+                            df = pd.read_json(file_obj.file)
+                            # If it's a Series (single object), convert to DataFrame
+                            if isinstance(df, pd.Series):
+                                df = df.to_frame().T
+                else:
+                    df = pd.DataFrame()
 
-                    if not df.empty and numeric_fields:
-                        # Pre-compute grouped stats for numeric pairs (limited to prevent exponential growth)
-                        for x_field in numeric_fields:
-                            for y_field in numeric_fields:
-                                if x_field != y_field:
-                                    key = f"{x_field}_{y_field}"
-                                    processed_chart_data[key] = group_and_calculate_stats(df, x_field, y_field)
+                if not df.empty and numeric_fields:
+                    # Pre-compute grouped stats for numeric pairs (limited to prevent exponential growth)
+                    for x_field in numeric_fields:
+                        for y_field in numeric_fields:
+                            if x_field != y_field:
+                                key = f"{x_field}_{y_field}"
+                                processed_chart_data[key] = group_and_calculate_stats(df, x_field, y_field)
 
-                except Exception as e:
-                    logger.warning(f"Failed to compute processed_chart_data: {e}")
-            else:
-                logger.info(f"Skipping chart data computation for large file ({estimated_rows} rows)")
+            except Exception as e:
+                logger.warning(f"Failed to compute processed_chart_data: {e}")
+        elif estimated_rows > max_rows_for_chart:
+            logger.info(f"Skipping chart data computation for large file ({estimated_rows} rows)")
 
         # For large files, don't save processed_chart_data to avoid DB memory errors
         if estimated_rows > max_rows_for_chart:

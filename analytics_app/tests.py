@@ -31,7 +31,7 @@ class UploadViewTestCase(TestCase):
 
     def test_json_upload_conversion(self):
         """Test uploading a JSON file - should be converted to CSV."""
-        json_content = '{"name": "John", "age": 25}\n{"name": "Jane", "age": 30}'
+        json_content = '[\n  {"name": "John", "age": 25},\n  {"name": "Jane", "age": 30}\n]'
         json_file = ContentFile(json_content.encode('utf-8'), name='test.json')
 
         response = self.client.post('/upload/', {'file': json_file})
