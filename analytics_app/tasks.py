@@ -35,16 +35,22 @@ def group_and_calculate_stats(df, x_field, y_field):
         std_val = row['std'] if not pd.isna(row['std']) else 0.0  # Handle NaN std
         count_val = row['count']
 
+        # Sanitize values to handle NaN and ensure JSON serializable
+        def sanitize_val(val):
+            if pd.isna(val) or (isinstance(val, float) and (np.isnan(val) or np.isinf(val))):
+                return None
+            return val
+
         result.append({
-            'x': x_val,
-            'y': mean_val,  # For line chart, y is the mean
+            'x': sanitize_val(x_val),
+            'y': sanitize_val(mean_val),  # For line chart, y is the mean
             'stats': {
-                'mean': mean_val,
-                'median': median_val,
-                'min': min_val,
-                'max': max_val,
-                'std': std_val,
-                'count': count_val
+                'mean': sanitize_val(mean_val),
+                'median': sanitize_val(median_val),
+                'min': sanitize_val(min_val),
+                'max': sanitize_val(max_val),
+                'std': sanitize_val(std_val),
+                'count': sanitize_val(count_val)
             }
         })
 

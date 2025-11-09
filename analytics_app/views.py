@@ -1044,27 +1044,66 @@ def generate_pdf_report_view(request, file_id):
     try:
         from reportlab.lib.pagesizes import letter
         from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
         from reportlab.lib import colors
+        from reportlab.lib.units import inch
         import io
 
         buffer = io.BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        doc = SimpleDocTemplate(buffer, pagesize=letter, leftMargin=0.5*inch, rightMargin=0.5*inch, topMargin=0.75*inch, bottomMargin=0.75*inch)
         styles = getSampleStyleSheet()
         story = []
 
-        # Title
+        # Custom styles
         title_style = ParagraphStyle(
             'CustomTitle',
             parent=styles['Heading1'],
-            fontSize=24,
-            spaceAfter=30,
+            fontSize=28,
+            spaceAfter=20,
+            alignment=1,  # Center
+            textColor=colors.darkblue,
+            fontName='Helvetica-Bold',
         )
+        heading2_style = ParagraphStyle(
+            'CustomHeading2',
+            parent=styles['Heading2'],
+            fontSize=18,
+            spaceAfter=15,
+            textColor=colors.navy,
+            fontName='Helvetica-Bold',
+        )
+        heading3_style = ParagraphStyle(
+            'CustomHeading3',
+            parent=styles['Heading3'],
+            fontSize=14,
+            spaceAfter=10,
+            textColor=colors.darkblue,
+            fontName='Helvetica-Bold',
+        )
+        normal_style = ParagraphStyle(
+            'CustomNormal',
+            parent=styles['Normal'],
+            fontSize=10,
+            spaceAfter=5,
+        )
+
+        # Header
+        header_style = ParagraphStyle(
+            'Header',
+            parent=styles['Normal'],
+            fontSize=12,
+            textColor=colors.grey,
+            alignment=1,
+        )
+        story.append(Paragraph("Analytics App - Data Analysis Report", header_style))
+        story.append(Spacer(1, 10))
+
+        # Title
         story.append(Paragraph(f"Analytics Report for {file_obj.file.name.split('/')[-1]}", title_style))
-        story.append(Spacer(1, 12))
+        story.append(Spacer(1, 20))
 
         # File Info
-        story.append(Paragraph("File Information", styles['Heading2']))
+        story.append(Paragraph("File Information", heading2_style))
         # Get number of columns from the dataframe
         try:
             df = pd.read_csv(file_obj.file.path)
@@ -1078,26 +1117,29 @@ def generate_pdf_report_view(request, file_id):
             ["Number of Rows", str(file_obj.num_rows)],
             ["Number of Columns", str(num_columns)],
         ]
-        table = Table(file_info)
+        table = Table(file_info, colWidths=[2*inch, 4*inch])
         table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.navy),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ('FONTSIZE', (0, 0), (-1, -1), 11),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+            ('TOPPADDING', (0, 0), (-1, 0), 8),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.lightblue),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.aliceblue, colors.lightcyan]),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ]))
         story.append(table)
-        story.append(Spacer(1, 12))
+        story.append(Spacer(1, 20))
 
         # Analysis Results
-        story.append(Paragraph("Analysis Results", styles['Heading2']))
+        story.append(Paragraph("Analysis Results", heading2_style))
         processed_data = ProcessedData.objects.filter(uploaded_file=file_obj)
 
         for pd_obj in processed_data:
-            story.append(Paragraph(f"Column: {pd_obj.column_name} ({pd_obj.data_type})", styles['Heading3']))
+            story.append(Paragraph(f"Column: {pd_obj.column_name} ({pd_obj.data_type})", heading3_style))
             stats = pd_obj.stats
             if isinstance(stats, str):
                 try:
@@ -1107,34 +1149,48 @@ def generate_pdf_report_view(request, file_id):
 
             stats_table_data = [["Statistic", "Value"]]
             for key, value in stats.items():
-                if key == 'outliers':
-                    if isinstance(value, dict) and 'values' in value:
-                        outlier_values = value['values'][:5]  # Limit to first 5 outliers
-                        stats_table_data.append([key, f"{value['count']} outliers: {', '.join(map(str, outlier_values))}"])
-                    else:
-                        stats_table_data.append([key, str(value)])
+                if isinstance(value, list):
+                    truncated = ', '.join(map(str, value[:5]))
+                    if len(value) > 5:
+                        truncated += '...'
+                    stats_table_data.append([key, truncated])
                 else:
-                    stats_table_data.append([key, str(value)])
+                    val_str = str(value)
+                    if len(val_str) > 50:
+                        val_str = val_str[:50] + '...'
+                    stats_table_data.append([key, val_str])
 
-            stats_table = Table(stats_table_data)
+            stats_table = Table(stats_table_data, colWidths=[2*inch, 4*inch])
             stats_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('BACKGROUND', (0, 0), (-1, 0), colors.navy),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
                 ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
                 ('FONTSIZE', (0, 0), (-1, -1), 10),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+                ('TOPPADDING', (0, 0), (-1, 0), 6),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.lightblue),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.aliceblue, colors.lightcyan]),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ]))
             story.append(stats_table)
-            story.append(Spacer(1, 12))
+            story.append(Spacer(1, 15))
 
         # Charts (if available)
-        story.append(Paragraph("Charts", styles['Heading2']))
-        # Note: Adding actual chart images would require generating them separately
-        # For now, we'll just mention that charts are available in the web interface
-        story.append(Paragraph("Charts are available in the web interface. Visit the results page to view and download charts.", styles['Normal']))
+        story.append(Paragraph("Charts", heading2_style))
+        story.append(Paragraph("Charts are available in the web interface. Visit the results page to view and download charts.", normal_style))
+
+        # Footer
+        story.append(Spacer(1, 20))
+        footer_style = ParagraphStyle(
+            'Footer',
+            parent=styles['Normal'],
+            fontSize=8,
+            textColor=colors.grey,
+            alignment=1,
+        )
+        story.append(Paragraph("Generated by Analytics App", footer_style))
 
         doc.build(story)
         buffer.seek(0)
