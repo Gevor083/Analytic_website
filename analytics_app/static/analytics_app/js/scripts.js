@@ -3,6 +3,62 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Analytics website loaded');
 
+    // Theme toggling logic
+    const themeToggleBtn = document.getElementById('themeToggle');
+    const themeIcon = themeToggleBtn ? themeToggleBtn.querySelector('i') : null;
+
+    if (themeToggleBtn) {
+        // Initial setup based on what's rendered by the backend to body class
+        const initialIsDark = document.body.classList.contains('dark-mode');
+        if (themeIcon) {
+            themeIcon.classList.replace('fa-moon', initialIsDark ? 'fa-sun' : 'fa-moon');
+            themeIcon.classList.replace('fa-sun', initialIsDark ? 'fa-sun' : 'fa-moon'); // ensure Fallback 
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            const selectedTheme = isDark ? 'dark' : 'light';
+            localStorage.setItem('theme', selectedTheme);
+
+            if (themeIcon) {
+                if (isDark) {
+                    themeIcon.classList.replace('fa-moon', 'fa-sun');
+                } else {
+                    themeIcon.classList.replace('fa-sun', 'fa-moon');
+                }
+            }
+
+            // Sync with backend
+            fetch('/set_theme/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ theme: selectedTheme })
+            }).then(response => response.json())
+              .catch(err => console.error('Error setting theme:', err));
+        });
+    }
+
+    // CSRF token helper for fetch
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
     // Navbar hover effect enhancement (optional)
     const navLinks = document.querySelectorAll('header nav ul.main-nav li a');
 

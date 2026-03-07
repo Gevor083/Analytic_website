@@ -99,3 +99,63 @@ button, .btn-primary {
     font-size: 1.2rem;
     color: #0C4B8E;
 }
+
+/* Dark Mode Theme Overrides */
+body.dark-mode {
+    background-color: #121212 !important;
+    color: #e0e0e0 !important;
+}
+
+body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, 
+body.dark-mode h4, body.dark-mode h5, body.dark-mode h6,
+body.dark-mode p {
+    color: #e0e0e0 !important;
+}
+
+body.dark-mode a {
+    color: #90caf9;
+}
+body.dark-mode a:hover {
+    color: #64b5f6;
+}
+
+body.dark-mode .card {
+    background-color: #1e1e1e !important;
+    border-color: #333 !important;
+    color: #e0e0e0 !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+body.dark-mode .table, body.dark-mode table {
+    border-color: #333 !important;
+    color: #e0e0e0 !important;
+}
+
+body.dark-mode .table thead {
+    background-color: #333 !important;
+    color: #fff !important;
+}
+
+body.dark-mode .table td, body.dark-mode .table th {
+    border-color: #333 !important;
+}
+
+body.dark-mode header, body.dark-mode footer {
+    background: linear-gradient(90deg, #1e1e1e 60%, #333 100%) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
+}
+
+body.dark-mode .btn-primary {
+    background-color: #90caf9 !important;
+    border-color: #90caf9 !important;
+    color: #121212 !important;
+}
+
+body.dark-mode .btn-primary:hover {
+    background-color: #64b5f6 !important;
+    border-color: #64b5f6 !important;
+}
+
+body.dark-mode .loading-text {
+    color: #e0e0e0;
+}

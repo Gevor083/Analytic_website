@@ -73,7 +73,7 @@
         }
     </style>
 </head>
-<body class="fade-in">
+<body class="fade-in {% if theme == 'dark' %}dark-mode{% endif %}">
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
             <div class="container-fluid">
@@ -113,6 +113,11 @@
                                 <a class="nav-link" href="{% url 'register' %}"><i class="fa fa-user-plus"></i> Register</a>
                             </li>
                         {% endif %}
+                        <li class="nav-item ms-lg-2 mt-2 mt-lg-0" style="display: flex; align-items: center;">
+                            <button id="themeToggle" class="btn btn-outline-light nav-link" style="padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: transparent; cursor: pointer;">
+                                <i class="fa fa-moon"></i>
+                            </button>
+                        </li>
                     </ul>
                 </div>
             </div>

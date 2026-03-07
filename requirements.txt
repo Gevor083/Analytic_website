@@ -5,12 +5,11 @@ Django==5.2.6
 psycopg2-binary==2.9.11
 SQLAlchemy==2.0.43
 
-# Caching / Redis
+# Caching / Redis / Task Queue
 redis==7.0.1
 django-redis==6.0.0
-
-# Task Queue
 celery==5.5.3
+gevent==24.2.1
 
 # Environment Variables
 python-dotenv==1.1.1
@@ -24,23 +23,16 @@ numpy==2.2.1
 matplotlib==3.10.3
 seaborn==0.13.2
 scipy==1.15.3
-plotly==6.2.0
 tabulate==0.9.0
 pillow==11.2.1
 openpyxl==3.1.5
+
+# Face Recognition Security
+face_recognition==1.3.0
+opencv-python==4.8.1.78
 
 # PDF Generation
 reportlab==4.0.4
 
 # HTTP / Utils
 requests==2.32.4
-
-# Face Recognition
-face_recognition==1.3.0
-opencv-python==4.8.1.78
-
-# Optional: keep this if you run Jupyter notebooks sometimes
-# jupyter==1.1.1
-# notebook==7.4.7
-
-# (remove comments "#" if you need them later)

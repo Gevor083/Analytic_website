@@ -1,46 +1,37 @@
 # Analytics Website
 
-A comprehensive Django-based web application for data analytics, featuring file upload, automated data analysis, chart generation, and secure face recognition-based admin login.
+A comprehensive Django-based web application for data analytics, featuring modern UI drag-and-drop file uploads, automated background data analysis via Celery, interactive Client-Side chart generation (Chart.js), and a secure face recognition-based admin login system.
 
-## Features
+## 🚀 Key Features
 
 ### Core Functionality
-- **File Upload & Analysis**: Upload CSV, JSON, or XLSX files for automated data analysis
-- **Data Visualization**: Generate interactive charts and graphs using Plotly
-- **Statistical Analysis**: Comprehensive data insights including correlations, distributions, and missing value analysis
-- **Export Capabilities**: Export analysis results to PDF reports
-- **User Management**: Registration, login, and user-specific file management
-- **API Endpoints**: RESTful API for programmatic access to analysis results
-
-### Advanced Features
-- **Face Recognition Login**: Secure admin authentication using facial recognition
-- **Background Processing**: Asynchronous task processing with Celery
-- **Caching**: Redis-based caching for improved performance
-- **Database Support**: PostgreSQL (production) or SQLite (development)
-- **Responsive Design**: Mobile-friendly interface with Bootstrap styling
+- **Modern Drag & Drop File Uploads**: Upload CSV, JSON, or XLSX files using a smart, interactive drop zone.
+- **Asynchronous Data Analysis**: Heavy Pandas statistical calculations (IQRs, Outliers) are delegated to Celery Workers to prevent server blocking.
+- **Data Visualization**: Generate lightning-fast interactive canvas charts and graphs using **Chart.js** on the client side (zero-RAM footprint).
+- **Interactive DataTables**: Preview up to 50 rows of sanitized data utilizing client-side searching, sorting, and pagination without reloading.
+- **Bento-Box Dashboards**: Clean, modern component dashboards displaying Min, Max, Mean, Missing arrays, and Data Types.
+- **Native Dark Mode**: A synchronized backend session architecture ensures dark-mode requests are saved and loaded purely unconditionally from the server, eliminating UI flashing.
+- **Export Capabilities**: Export analysis results and dynamically generated charts to high-quality PDF reports.
 
 ### Security
-- Face-based admin login with webcam integration
-- CSRF protection and secure session management
-- File upload validation and size limits
-- HTTPS support for camera access
+- **Face Recognition Login**: Secure admin authentication using live webcam integration mappings.
+- **CSRF & Sessions**: Secure session management intercepting malicious cross-site headers.
+- **Strict File Normalization**: Safely captures JSON/XLSX structures, mapping them strictly to memory-buffered CSV outputs.
+- **HTTPS/SSL ready** for webcam streaming accesses.
 
-## Installation
+## 🛠 Installation
 
 ### Prerequisites
 - Python 3.8+
 - PostgreSQL (recommended) or SQLite
-- Redis (optional, for caching)
-- Webcam (for face recognition login)
+- Redis (Required for celery asynchronous task processing)
+- Webcam (Required for face recognition features)
 
 ### Windows Setup (Special Requirements for Face Recognition)
 Due to dependencies on dlib and CMake, follow these steps carefully:
 
 1. **Install CMake**:
-   ```bash
-   # Download and install CMake from https://cmake.org/download/
-   # Or use the provided MSI/ZIP in the project directory
-   ```
+   Download and install CMake from https://cmake.org/download/
 
 2. **Install dlib**:
    ```bash
@@ -88,10 +79,15 @@ python manage.py register_face <admin_username>
 ```
 Follow the prompts to capture your face using the webcam.
 
-## Usage
+## 💻 Usage
 
 ### Starting the Application
 ```bash
+# 1. Start the Redis Server (Ensure Redis is running on port 6379)
+# 2. Start the Celery Queue
+celery -A analytics_project worker --loglevel=info -P gevent 
+
+# 3. Start the Web Server
 python manage.py runserver
 ```
 Access the application at `http://localhost:8000`
@@ -99,102 +95,37 @@ Access the application at `http://localhost:8000`
 ### Face Login
 - Navigate to `/face-login/`
 - Allow camera access in your browser
-- Position your face in the camera view
+- Position your face properly inside the camera bounding boxes
 - Click "Capture Image" then "Login"
 
-### File Analysis Workflow
-1. Register/Login as a regular user
-2. Upload a data file (CSV, JSON, XLSX)
-3. View analysis results and generated charts
-4. Export results or re-analyze data
+## 📁 Project Structure
 
-### Background Tasks
-Start Celery worker for background processing:
-```bash
-celery -A analytics_project worker --loglevel=info
-```
-
-## Project Structure
-
-```
+```text
 analytic_website/
 ├── analytics_app/              # Main Django app
-│   ├── management/commands/    # Custom management commands
-│   ├── migrations/             # Database migrations
-│   ├── static/                 # Static files (CSS, JS)
-│   ├── templates/              # HTML templates
-│   ├── tasks.py                # Celery tasks
-│   ├── views.py                # View functions
-│   └── models.py               # Database models
-├── analytics_project/          # Django project settings
-├── faces/                      # Face recognition reference images
-├── uploads/                    # User uploaded files
-├── test materials/             # Sample data files
-├── explanations/               # Documentation and tutorials
-└── requirements.txt            # Python dependencies
+│   ├── static/analytics_app/   # Scripts, custom components.css, and base styling
+│   ├── templates/              # HTML templates (Bootstrap 5, Chart.js integrations)
+│   ├── tasks.py                # Celery worker calculations
+│   └── views.py                # Thin HTTP routers and /api/ microservices
+├── analytics_project/          # Django settings, WSGI, ASGI context
+├── faces/                      # Encrypted reference imagery
+├── uploads/                    # User uploaded raw files
+├── explanations/               # Markdown developer architecture guides
+└── requirements.txt            # Python dependencies lists
 ```
 
-## API Endpoints
+## 🌐 JSON API Endpoints
+The platform utilizes headless endpoints for rich front-end rendering:
+- `GET /api/chart_data/<file_id>/?chart_type=pie` - Retrieves JSON data packets parsed perfectly for Chart.js.
+- `POST /set_theme/` - Changes session-level CSS theming dynamically.
+- `GET /api/results/<file_id>/` - Gets raw analytic JSON arrays.
 
-### Analysis Results
-- `GET /api/results/<file_id>/` - Get analysis results for a file
-- `GET /api/files/` - List all user files
-
-### Authentication
-- `POST /login/` - User login
-- `POST /register/` - User registration
-- `GET /face-login/` - Face recognition login page
-
-## Testing
-
-Run the test suite:
-```bash
-python manage.py test
-```
-
-## Deployment
-
-### Production Setup
-1. Set `DEBUG=False` in settings
-2. Configure PostgreSQL database
-3. Set up Redis for caching
-4. Use gunicorn for serving:
-   ```bash
-   gunicorn analytics_project.wsgi:application --bind 0.0.0.0:8000
-   ```
-5. Set up reverse proxy (nginx) for static files and SSL
-
-### Docker Support
-The application can be containerized using Docker. Ensure all dependencies are properly configured in the Dockerfile.
-
-## Contributing
-
+## 🤝 Contributing
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Submit a pull request
+2. Create your feature branch (`git checkout -b feature/amazing_chart`)
+3. Write thin views and test locally via `python manage.py test`
+4. Commit & push
+5. Open a Pull Request
 
-## License
-
+## ⚖️ License
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Troubleshooting
-
-### Face Recognition Issues
-- Ensure CMake and dlib are properly installed
-- Check webcam permissions in browser
-- Verify face images are clear and well-lit
-
-### Database Connection
-- Confirm DATABASE_URL in .env file
-- Run migrations: `python manage.py migrate`
-
-### Performance
-- Enable Redis caching for better performance
-- Use PostgreSQL in production
-- Monitor Celery tasks for background processing
-
-## Support
-
-For issues and questions, please create an issue in the GitHub repository or contact the development team.

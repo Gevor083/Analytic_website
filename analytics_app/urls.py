@@ -22,4 +22,6 @@ urlpatterns = [
     path('export/<int:file_id>/', views.export_results_view, name='export_results'),
     path('full_data/<int:file_id>/', views.full_data_view, name='full_data'),
     path('face-login/', views.face_login_view, name='face_login'),
+    path('set_theme/', views.set_theme, name='set_theme'),
+    path('api/chart_data/<int:file_id>/', views.chart_data_api, name='chart_data_api'),
 ]

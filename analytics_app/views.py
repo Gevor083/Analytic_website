@@ -299,8 +299,8 @@ def result_view(request, file_id):
         df = pd.read_csv(file_obj.file.path)
         categorical_fields = get_categorical_fields(df)
         
-        # Get data preview (first 10 rows)
-        data_preview = df.head(10).to_dict(orient='records')
+        # Get data preview (first 50 rows) for datatables
+        data_preview = df.head(50).to_dict(orient='records')
     except Exception:
         categorical_fields = []
         data_preview = [] # Ensure data_preview is always defined
@@ -323,6 +323,7 @@ def result_view(request, file_id):
         'numeric_fields_json': numeric_fields_json,
         'categorical_fields_json': categorical_fields_json,
         'data_preview': data_preview, # Add data_preview to context
+        'file_id': file_id,
     }
     context['show_modal'] = request.GET.get('show_modal', '0')
     return render(request, 'analytics_app/result.html', context)
@@ -1391,3 +1392,70 @@ def face_login_view(request):
             return render(request, 'analytics_app/face_login.html', {'error': 'Face not recognized.'})
 
     return render(request, 'analytics_app/face_login.html')
+
+from django.http import JsonResponse
+import json
+from django.views.decorators.http import require_POST
+
+@require_POST
+def set_theme(request):
+    try:
+        data = json.loads(request.body)
+        theme = data.get('theme', 'light')
+        if theme in ['light', 'dark']:
+            request.session['theme'] = theme
+            return JsonResponse({'status': 'ok', 'theme': theme})
+        return JsonResponse({'status': 'error', 'message': 'Invalid theme'}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+from django.http import JsonResponse
+import pandas as pd
+
+def chart_data_api(request, file_id):
+    """
+    Returns JSON formatted data for client-side Chart.js rendering.
+    """
+    file_obj = get_object_or_404(UploadedFile, id=file_id)
+    chart_type = request.GET.get('chart_type', 'line')
+    x_axis = request.GET.get('x_axis')
+    y_axis = request.GET.get('y_axis')
+
+    try:
+        df = pd.read_csv(file_obj.file.path)
+    except Exception as e:
+        return JsonResponse({'error': f"Error reading file: {e}"}, status=500)
+
+    try:
+        # We need to fillna so JSON serialization doesn't fail with NaNs
+        df = df.fillna(0) 
+
+        if chart_type in ['line', 'bar']:
+            cdata = group_and_calculate_stats(df, x_axis, y_axis)
+            x_data = [item['x'] for item in cdata]
+            y_data = [item['y'] for item in cdata]
+            return JsonResponse({'x': x_data, 'y': y_data, 'label': y_axis})
+
+        elif chart_type == 'scatter':
+            # take sample to avoid overflowing browser
+            df_sampled = df.sample(n=min(1000, len(df)))
+            x_data = df_sampled[x_axis].tolist()
+            y_data = df_sampled[y_axis].tolist()
+            # For chart.js scatter we need array of objects {x, y}
+            points = [{'x': x, 'y': y} for x, y in zip(x_data, y_data)]
+            return JsonResponse({'data': points, 'x_label': x_axis, 'y_label': y_axis})
+
+        elif chart_type == 'pie':
+            counts = df[x_axis].value_counts().head(10) # max 10 slices
+            return JsonResponse({'labels': counts.index.tolist(), 'data': counts.values.tolist(), 'label': x_axis})
+            
+        elif chart_type == 'histogram':
+            import numpy as np
+            counts, bins = np.histogram(pd.to_numeric(df[x_axis], errors='coerce').dropna(), bins=20)
+            labels = [f"{bins[i]:.2f} - {bins[i+1]:.2f}" for i in range(len(counts))]
+            return JsonResponse({'labels': labels, 'data': counts.tolist(), 'label': 'Frequency'})
+            
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Unsupported chart type'}, status=400)
