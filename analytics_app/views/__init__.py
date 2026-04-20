@@ -11,6 +11,7 @@ from .auth_views import (
     logout_view,
     register_view,
     face_login_view,
+    admin_face_verify_view,
     set_theme,
 )
 
@@ -48,7 +49,8 @@ from .export_views import (
 
 __all__ = [
     # auth
-    'login_view', 'logout_view', 'register_view', 'face_login_view', 'set_theme',
+    'login_view', 'logout_view', 'register_view', 'face_login_view',
+    'admin_face_verify_view', 'set_theme',
     # upload
     'upload_view', 'delete_file_view', 'reanalyze_file_view',
     # result / charts

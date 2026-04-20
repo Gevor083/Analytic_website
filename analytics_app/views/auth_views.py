@@ -1,5 +1,5 @@
 """
-Authentication views: login, logout, register, face-login, theme switching.
+Authentication views: login, logout, register, admin face verification, theme switching.
 """
 
 import logging
@@ -17,19 +17,40 @@ logger = logging.getLogger(__name__)
 
 
 def login_view(request):
-    """Handle username/password login."""
+    """Handle username/password login.
+    Regular users: log in immediately.
+    Admin/staff users: store pending session, require face verification popup.
+    """
     if request.user.is_authenticated:
         return redirect('home')
+
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
         password = request.POST.get('password', '').strip()
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
         user = authenticate(request, username=username, password=password)
         if user is not None:
-            login(request, user)
-            next_url = request.GET.get('next', 'home')
-            return redirect(next_url)
+            if user.is_staff or user.is_superuser:
+                # Store pending admin id — face verification required before login
+                request.session['pending_admin_id'] = user.id
+                if is_ajax:
+                    return JsonResponse({'status': 'face_required'})
+                # Non-AJAX fallback (should not happen with our JS form)
+                return render(request, 'analytics_app/login.html', {'face_required': True})
+            else:
+                login(request, user)
+                next_url = request.GET.get('next', 'home')
+                if is_ajax:
+                    from django.urls import reverse
+                    return JsonResponse({'status': 'ok', 'redirect': reverse(next_url) if '/' not in next_url else next_url})
+                return redirect(next_url)
+
         logger.warning("Failed login attempt for username: %s", username)
+        if is_ajax:
+            return JsonResponse({'status': 'error', 'message': 'Invalid username or password.'}, status=401)
         return render(request, 'analytics_app/login.html', {'error': 'Invalid username or password.'})
+
     return render(request, 'analytics_app/login.html')
 
 
@@ -70,76 +91,104 @@ def register_view(request):
             return redirect('home')
         except Exception as e:
             return render(request, 'analytics_app/register.html', {'error': f'Error: {str(e)}'})
+
     return render(request, 'analytics_app/register.html')
 
 
+def admin_face_verify_view(request):
+    """
+    AJAX endpoint — verify face for a pending admin login.
+    Called after successful username/password auth for staff users.
+    Returns JSON: {"status": "ok", "redirect": "..."} or {"status": "error", "message": "..."}
+    """
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Method not allowed.'}, status=405)
+
+    pending_id = request.session.get('pending_admin_id')
+    if not pending_id:
+        return JsonResponse(
+            {'status': 'error', 'message': 'Session expired. Please log in again.'},
+            status=400
+        )
+
+    try:
+        import face_recognition
+        import cv2
+        import numpy as np
+        import base64
+        import os
+    except ImportError as e:
+        logger.error("Face recognition dependencies not installed: %s", e)
+        return JsonResponse(
+            {'status': 'error', 'message': 'Face recognition is not available on this server.'},
+            status=500
+        )
+
+    image_data = request.POST.get('image')
+    if not image_data:
+        return JsonResponse({'status': 'error', 'message': 'No image data received.'}, status=400)
+
+    try:
+        _, encoded = image_data.split(',', 1)
+        image_bytes = base64.b64decode(encoded)
+        np_arr = np.frombuffer(image_bytes, np.uint8)
+        img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+    except Exception as e:
+        logger.error("Error decoding face image: %s", e)
+        return JsonResponse({'status': 'error', 'message': 'Invalid image data.'}, status=400)
+
+    face_locations = face_recognition.face_locations(img)
+    if not face_locations:
+        return JsonResponse({'status': 'error', 'message': 'No face detected. Please try again.'}, status=400)
+
+    face_encoding = face_recognition.face_encodings(img, face_locations)[0]
+
+    faces_dir = os.path.join(settings.BASE_DIR, 'faces')
+    known_encodings, known_usernames = [], []
+
+    if os.path.exists(faces_dir):
+        for filename in os.listdir(faces_dir):
+            if filename.lower().endswith(('.jpg', '.jpeg', '.png')):
+                username = os.path.splitext(filename)[0]
+                image_path = os.path.join(faces_dir, filename)
+                try:
+                    known_image = face_recognition.load_image_file(image_path)
+                    locs = face_recognition.face_locations(known_image)
+                    if locs:
+                        enc = face_recognition.face_encodings(known_image, locs)[0]
+                        known_encodings.append(enc)
+                        known_usernames.append(username)
+                except Exception as e:
+                    logger.error("Error loading face image %s: %s", filename, e)
+
+    if not known_encodings:
+        return JsonResponse(
+            {'status': 'error', 'message': 'No admin face profiles configured. Contact system administrator.'},
+            status=400
+        )
+
+    matches = face_recognition.compare_faces(known_encodings, face_encoding, tolerance=0.6)
+    distances = face_recognition.face_distance(known_encodings, face_encoding)
+
+    if True in matches:
+        best_idx = int(np.argmin(distances))
+        try:
+            user = User.objects.get(id=pending_id, is_staff=True)
+            del request.session['pending_admin_id']
+            login(request, user)
+            logger.info("Admin face login successful for user id=%s", pending_id)
+            return JsonResponse({'status': 'ok', 'redirect': '/moderator_dashboard/'})
+        except User.DoesNotExist:
+            request.session.pop('pending_admin_id', None)
+            return JsonResponse({'status': 'error', 'message': 'Admin user not found.'}, status=400)
+
+    logger.warning("Admin face login failed for pending user id=%s", pending_id)
+    return JsonResponse({'status': 'error', 'message': 'Face not recognized. Access denied.'}, status=401)
+
+
 def face_login_view(request):
-    """Face-recognition login for admin/staff users."""
-    if request.method == 'POST':
-        try:
-            import face_recognition
-            import cv2
-            import numpy as np
-            import base64
-            import os
-        except ImportError as e:
-            logger.error("Face recognition dependencies not installed: %s", e)
-            return render(request, 'analytics_app/face_login.html',
-                          {'error': 'Face recognition is not available on this server.'})
-
-        image_data = request.POST.get('image')
-        if not image_data:
-            return render(request, 'analytics_app/face_login.html', {'error': 'No image data received.'})
-
-        try:
-            _, encoded = image_data.split(',', 1)
-            image_bytes = base64.b64decode(encoded)
-            np_arr = np.frombuffer(image_bytes, np.uint8)
-            img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-        except Exception as e:
-            logger.error("Error decoding face image: %s", e)
-            return render(request, 'analytics_app/face_login.html', {'error': 'Invalid image data.'})
-
-        face_locations = face_recognition.face_locations(img)
-        if not face_locations:
-            return render(request, 'analytics_app/face_login.html', {'error': 'No face detected in the image.'})
-
-        face_encoding = face_recognition.face_encodings(img, face_locations)[0]
-
-        faces_dir = os.path.join(settings.BASE_DIR, 'faces')
-        known_encodings, known_usernames = [], []
-
-        if os.path.exists(faces_dir):
-            for filename in os.listdir(faces_dir):
-                if filename.lower().endswith(('.jpg', '.jpeg', '.png')):
-                    username = os.path.splitext(filename)[0]
-                    image_path = os.path.join(faces_dir, filename)
-                    try:
-                        known_image = face_recognition.load_image_file(image_path)
-                        locs = face_recognition.face_locations(known_image)
-                        if locs:
-                            enc = face_recognition.face_encodings(known_image, locs)[0]
-                            known_encodings.append(enc)
-                            known_usernames.append(username)
-                    except Exception as e:
-                        logger.error("Error loading face image %s: %s", filename, e)
-
-        matches = face_recognition.compare_faces(known_encodings, face_encoding, tolerance=0.6)
-        distances = face_recognition.face_distance(known_encodings, face_encoding)
-
-        if True in matches:
-            best_idx = np.argmin(distances)
-            matched_username = known_usernames[best_idx]
-            try:
-                user = User.objects.get(username=matched_username, is_staff=True)
-                login(request, user)
-                return redirect('/admin/')
-            except User.DoesNotExist:
-                return render(request, 'analytics_app/face_login.html',
-                              {'error': 'Matched user is not an admin.'})
-        return render(request, 'analytics_app/face_login.html', {'error': 'Face not recognized.'})
-
-    return render(request, 'analytics_app/face_login.html')
+    """Legacy face login page — redirect to main login (face auth is now a popup)."""
+    return redirect('login')
 
 
 @require_POST
