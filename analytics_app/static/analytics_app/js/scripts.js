@@ -95,21 +95,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Loader animation for upload form
-    const uploadForm = document.querySelector('form[method="post"]');
-    if(uploadForm) {
-        uploadForm.addEventListener('submit', (e) => {
+    // Loader animation for upload form (exclude login/ajax forms and logout)
+    const forms = document.querySelectorAll('form[method="post"]:not(#login-form):not(#face-login-form):not([action*="logout"])');
+    forms.forEach(form => {
+        form.addEventListener('submit', (e) => {
             // Show loading overlay
             showLoadingOverlay('');
 
             // Disable form submission to prevent multiple submits
-            const submitBtn = uploadForm.querySelector('button[type="submit"]');
+            const submitBtn = form.querySelector('button[type="submit"]');
             if(submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = ' Uploading...';
+                // Ignore if it's the logout button
+                if (submitBtn.innerText.trim() !== 'Logout') {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = ' Processing...';
+                }
             }
         });
-    }
+    });
 
     // Loader for chart generation
     const generateChartBtn = document.getElementById('generateChartBtn');

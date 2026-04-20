@@ -14,13 +14,17 @@
             <p class="auth-sub">Sign in to your DataLens account</p>
         </div>
 
+        <div id="login-error" class="alert alert-danger d-flex align-items-center gap-2" style="display:none!important;">
+            <i class="fa fa-triangle-exclamation fa-sm"></i>
+            <span id="login-error-msg"></span>
+        </div>
         {% if error %}
         <div class="alert alert-danger d-flex align-items-center gap-2">
             <i class="fa fa-triangle-exclamation fa-sm"></i> {{ error }}
         </div>
         {% endif %}
 
-        <form method="post">
+        <form id="login-form" method="post">
             {% csrf_token %}
             <div class="form-group-custom mb-3">
                 <label class="form-label-custom">Username</label>
@@ -41,7 +45,7 @@
                     </button>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary w-100 py-3 fw-semibold">
+            <button type="submit" id="login-submit-btn" class="btn btn-primary w-100 py-3 fw-semibold">
                 <i class="fa fa-right-to-bracket me-2"></i>Sign In
             </button>
         </form>
@@ -50,14 +54,77 @@
             <p class="auth-sub">Don't have an account?
                 <a href="{% url 'register' %}" class="auth-link">Create one free</a>
             </p>
-            <a href="{% url 'face_login' %}" class="btn w-100 mt-2" style="background:var(--surface);border:1px solid var(--border);color:var(--text-muted);border-radius:10px;font-size:.875rem;">
-                <i class="fa fa-face-smile me-2" style="color:var(--accent);"></i>Sign in with Face Recognition
-            </a>
         </div>
     </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════
+     ADMIN FACE VERIFICATION MODAL
+     Shown only after successful username/password for admin
+     ═══════════════════════════════════════════════════════ -->
+<div id="face-modal-overlay" class="face-overlay" style="display:none;" aria-modal="true" role="dialog">
+    <div class="face-modal glass-card">
+
+        <!-- Header -->
+        <div class="face-modal-header">
+            <div class="face-shield-ring">
+                <i class="fa fa-shield-halved"></i>
+            </div>
+            <div>
+                <h3 class="face-modal-title">Admin Identity Verification</h3>
+                <p class="face-modal-sub">Step 2 of 2 — Face Recognition</p>
+            </div>
+        </div>
+
+        <!-- Status bar -->
+        <div id="face-status-bar" class="face-status idle">
+            <i class="fa fa-circle-info fa-sm" id="face-status-icon"></i>
+            <span id="face-status-text">Position your face in the frame and press <strong>Scan</strong></span>
+        </div>
+
+        <!-- Camera area -->
+        <div class="face-cam-container">
+            <div class="face-cam-frame" id="face-cam-frame">
+                <!-- Corner brackets -->
+                <span class="corner tl"></span>
+                <span class="corner tr"></span>
+                <span class="corner bl"></span>
+                <span class="corner br"></span>
+                <!-- Scanning line -->
+                <div class="scan-line" id="scan-line"></div>
+                <!-- Video / snapshot switch -->
+                <video id="face-video" autoplay playsinline muted></video>
+                <canvas id="face-canvas" style="display:none;"></canvas>
+            </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="face-actions">
+            <button id="face-scan-btn" class="btn btn-primary px-4" onclick="faceCapture()">
+                <i class="fa fa-camera me-2"></i>Scan Face
+            </button>
+            <button id="face-retry-btn" class="btn btn-outline-primary px-4" style="display:none;" onclick="faceRetry()">
+                <i class="fa fa-rotate-right me-2"></i>Retry
+            </button>
+            <button id="face-verify-btn" class="btn btn-success px-4" style="display:none;" onclick="faceVerify()">
+                <i class="fa fa-check me-2"></i>Verify
+            </button>
+        </div>
+
+        <!-- Cancel -->
+        <div class="text-center mt-3">
+            <button class="face-cancel-link" onclick="faceCancel()">
+                <i class="fa fa-arrow-left fa-sm me-1"></i>Cancel and go back
+            </button>
+        </div>
+
+        <!-- Hidden form data -->
+        <input type="hidden" id="face-image-data">
+    </div>
+</div>
+
 <style>
+/* ── Auth layout ─────────────────────────────────────────── */
 .auth-wrap {
     min-height: calc(100vh - 140px);
     display: flex; align-items: center; justify-content: center;
@@ -79,7 +146,7 @@
 .auth-link  { color:var(--accent); font-weight:600; text-decoration:none; }
 .auth-link:hover { text-decoration:underline; }
 
-/* Input styling */
+/* ── Input styling ───────────────────────────────────────── */
 .form-label-custom { font-size:.8rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:6px; }
 .input-wrap { position:relative; }
 .input-icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:.875rem; pointer-events:none; }
@@ -98,15 +165,366 @@
     padding:4px; transition:color .2s;
 }
 .input-eye:hover { color:var(--accent); }
+
+/* ── Face modal overlay ──────────────────────────────────── */
+.face-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: rgba(0,0,0,0.72);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 1rem;
+    animation: overlayIn .3s ease;
+}
+@keyframes overlayIn { from { opacity:0; } to { opacity:1; } }
+
+.face-modal {
+    width: 100%; max-width: 500px;
+    padding: 2rem;
+    border-radius: 24px;
+    border: 1px solid rgba(99,102,241,0.25);
+    background: rgba(15,15,26,0.92);
+    box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(99,102,241,0.15);
+    animation: modalIn .35s cubic-bezier(.34,1.56,.64,1);
+    position: relative;
+    overflow: hidden;
+}
+[data-theme="light"] .face-modal {
+    background: rgba(248,250,255,0.96);
+    box-shadow: 0 24px 80px rgba(0,0,0,0.2), 0 0 0 1px rgba(99,102,241,0.2);
+}
+.face-modal::before {
+    content:'';
+    position:absolute; top:-60px; right:-60px;
+    width:200px; height:200px; border-radius:50%;
+    background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%);
+    pointer-events:none;
+}
+@keyframes modalIn {
+    from { opacity:0; transform: scale(.88) translateY(20px); }
+    to   { opacity:1; transform: scale(1)  translateY(0); }
+}
+
+/* ── Modal header ────────────────────────────────────────── */
+.face-modal-header {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 1.25rem;
+}
+.face-shield-ring {
+    flex-shrink: 0;
+    width: 52px; height: 52px; border-radius: 14px;
+    background: linear-gradient(135deg, var(--accent), #7c3aed);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; color: #fff;
+    box-shadow: 0 6px 18px var(--accent-glow);
+}
+.face-modal-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 1.15rem;
+    color: var(--text); margin: 0 0 2px;
+}
+.face-modal-sub { font-size: .8rem; color: var(--text-muted); margin: 0; }
+
+/* ── Status bar ──────────────────────────────────────────── */
+.face-status {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px; border-radius: 10px;
+    font-size: .84rem; font-weight: 500;
+    margin-bottom: 1.25rem;
+    transition: all .3s;
+}
+.face-status.idle    { background: rgba(99,102,241,0.1);  color: #a5b4fc; border: 1px solid rgba(99,102,241,0.2); }
+.face-status.scan    { background: rgba(245,158,11,0.1);  color: #fcd34d; border: 1px solid rgba(245,158,11,0.25); }
+.face-status.ok      { background: rgba(16,185,129,0.1);  color: #6ee7b7; border: 1px solid rgba(16,185,129,0.25); }
+.face-status.error   { background: rgba(239,68,68,0.1);   color: #fca5a5; border: 1px solid rgba(239,68,68,0.25); }
+.face-status.loading { background: rgba(99,102,241,0.1);  color: #a5b4fc; border: 1px solid rgba(99,102,241,0.2); }
+
+/* ── Camera frame ────────────────────────────────────────── */
+.face-cam-container {
+    display: flex; justify-content: center;
+    margin-bottom: 1.25rem;
+}
+.face-cam-frame {
+    position: relative;
+    width: 280px; height: 210px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #000;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+#face-video, #face-canvas {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    border-radius: 16px;
+}
+
+/* Corner bracket decorations */
+.corner {
+    position: absolute; width: 22px; height: 22px;
+    border-color: var(--accent); border-style: solid;
+    z-index: 10;
+}
+.corner.tl { top:8px;  left:8px;  border-width:3px 0 0 3px; border-radius:4px 0 0 0; }
+.corner.tr { top:8px;  right:8px; border-width:3px 3px 0 0; border-radius:0 4px 0 0; }
+.corner.bl { bottom:8px; left:8px;  border-width:0 0 3px 3px; border-radius:0 0 0 4px; }
+.corner.br { bottom:8px; right:8px; border-width:0 3px 3px 0; border-radius:0 0 4px 0; }
+
+/* Scanning animation line */
+.scan-line {
+    position: absolute; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), #a78bfa, transparent);
+    box-shadow: 0 0 10px var(--accent);
+    z-index: 9;
+    top: 0;
+    display: none;
+}
+.scan-line.active {
+    display: block;
+    animation: scanDown 1.6s ease-in-out infinite;
+}
+@keyframes scanDown {
+    0%   { top: 0%;   opacity:1; }
+    50%  { top: 95%;  opacity:1; }
+    100% { top: 0%;   opacity:0.3; }
+}
+
+/* ── Action buttons ──────────────────────────────────────── */
+.face-actions {
+    display: flex; justify-content: center; gap: 10px;
+    flex-wrap: wrap;
+}
+.btn-success {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    border: none; color: #fff !important; font-weight: 600;
+    border-radius: 10px; box-shadow: 0 4px 14px rgba(16,185,129,0.3);
+    transition: all .25s;
+}
+.btn-success:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(16,185,129,0.4); }
+
+/* ── Cancel link ─────────────────────────────────────────── */
+.face-cancel-link {
+    background: none; border: none;
+    color: var(--text-muted); font-size: .82rem;
+    cursor: pointer; transition: color .2s;
+    padding: 4px 8px;
+}
+.face-cancel-link:hover { color: var(--accent); }
+
+/* ── Loading spinner for verify ─────────────────────────── */
+.spinner-sm {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+/* ── Password visibility toggle ─────────────────────────────── */
 function togglePwd(id, btn) {
     const inp = document.getElementById(id);
     if (inp.type === 'password') { inp.type = 'text';     btn.innerHTML = '<i class="fa fa-eye-slash fa-sm"></i>'; }
     else                         { inp.type = 'password'; btn.innerHTML = '<i class="fa fa-eye fa-sm"></i>'; }
 }
+
+/* ── AJAX Login form ─────────────────────────────────────────── */
+document.getElementById('login-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('login-submit-btn');
+    const errDiv = document.getElementById('login-error');
+    const errMsg = document.getElementById('login-error-msg');
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-sm"></span>Signing in…';
+    errDiv.style.display = 'none';
+
+    const form = e.target;
+    const data = new FormData(form);
+
+    try {
+        const res = await fetch(form.action || window.location.href, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: data,
+        });
+
+        const json = await res.json();
+
+        if (json.status === 'face_required') {
+            // Admin — open face verification modal
+            openFaceModal();
+        } else if (json.status === 'ok') {
+            window.location.href = json.redirect || '/';
+        } else {
+            errMsg.textContent = json.message || 'Invalid username or password.';
+            errDiv.style.display = 'flex';
+        }
+    } catch (err) {
+        errMsg.textContent = 'Network error. Please try again.';
+        errDiv.style.display = 'flex';
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-right-to-bracket me-2"></i>Sign In';
+    }
+});
+
+/* ══════════════════════════════════════════════════════════════
+   FACE VERIFICATION MODAL LOGIC
+   ══════════════════════════════════════════════════════════════ */
+let faceCamStream = null;
+
+function faceStatus(type, text) {
+    const bar = document.getElementById('face-status-bar');
+    const ico = document.getElementById('face-status-icon');
+    const txt = document.getElementById('face-status-text');
+    bar.className = 'face-status ' + type;
+    const icons = { idle:'circle-info', scan:'rotate', ok:'circle-check', error:'circle-xmark', loading:'circle-notch' };
+    const spin  = type === 'loading' ? ' fa-spin' : '';
+    ico.className = `fa fa-${icons[type] || 'circle-info'} fa-sm${spin}`;
+    txt.innerHTML = text;
+}
+
+async function openFaceModal() {
+    const overlay = document.getElementById('face-modal-overlay');
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    faceStatus('idle', 'Position your face in the frame and press <strong>Scan</strong>');
+    showFaceBtn('scan');
+
+    // Stop any previous stream
+    stopCam();
+
+    try {
+        faceCamStream = await navigator.mediaDevices.getUserMedia({ video: { width:640, height:480, facingMode:'user' } });
+        const video = document.getElementById('face-video');
+        video.srcObject = faceCamStream;
+        video.style.display = 'block';
+        document.getElementById('face-canvas').style.display = 'none';
+    } catch (err) {
+        faceStatus('error', 'Camera access denied: ' + err.message);
+        showFaceBtn('retry');
+    }
+}
+
+function stopCam() {
+    if (faceCamStream) {
+        faceCamStream.getTracks().forEach(t => t.stop());
+        faceCamStream = null;
+    }
+}
+
+function closeFaceModal() {
+    const overlay = document.getElementById('face-modal-overlay');
+    overlay.style.display = 'none';
+    document.body.style.overflow = '';
+    stopCam();
+    document.getElementById('scan-line').classList.remove('active');
+}
+
+function faceCancel() {
+    closeFaceModal();
+    // Re-enable login form
+    const btn = document.getElementById('login-submit-btn');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa fa-right-to-bracket me-2"></i>Sign In';
+}
+
+function showFaceBtn(which) {
+    document.getElementById('face-scan-btn').style.display   = which === 'scan'   ? '' : 'none';
+    document.getElementById('face-retry-btn').style.display  = which === 'retry'  ? '' : 'none';
+    document.getElementById('face-verify-btn').style.display = which === 'verify' ? '' : 'none';
+}
+
+function faceCapture() {
+    const video  = document.getElementById('face-video');
+    const canvas = document.getElementById('face-canvas');
+    const ctx    = canvas.getContext('2d');
+
+    faceStatus('scan', '<strong>Scanning…</strong> Hold still');
+    document.getElementById('scan-line').classList.add('active');
+    showFaceBtn(''); // hide all
+
+    // Brief delay for scan animation effect
+    setTimeout(() => {
+        canvas.width  = video.videoWidth  || 640;
+        canvas.height = video.videoHeight || 480;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const dataURL = canvas.toDataURL('image/jpeg', 0.92);
+        document.getElementById('face-image-data').value = dataURL;
+
+        // Show snapshot instead of live feed
+        video.style.display  = 'none';
+        canvas.style.display = 'block';
+        document.getElementById('scan-line').classList.remove('active');
+
+        faceStatus('ok', 'Face captured! Press <strong>Verify</strong> to complete sign-in.');
+        showFaceBtn('verify');
+    }, 1600);
+}
+
+function faceRetry() {
+    const video  = document.getElementById('face-video');
+    const canvas = document.getElementById('face-canvas');
+    video.style.display  = 'block';
+    canvas.style.display = 'none';
+    document.getElementById('scan-line').classList.remove('active');
+    faceStatus('idle', 'Position your face in the frame and press <strong>Scan</strong>');
+    showFaceBtn('scan');
+}
+
+async function faceVerify() {
+    const imageData = document.getElementById('face-image-data').value;
+    if (!imageData) { faceStatus('error', 'No image captured. Please scan again.'); faceRetry(); return; }
+
+    const btn = document.getElementById('face-verify-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-sm"></span>Verifying…';
+    faceStatus('loading', '<strong>Verifying identity…</strong> Please wait');
+
+    const formData = new FormData();
+    formData.append('image', imageData);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    try {
+        const res = await fetch('{% url "admin_face_verify" %}', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData,
+        });
+
+        const json = await res.json();
+
+        if (json.status === 'ok') {
+            faceStatus('ok', '<strong>Identity verified!</strong> Redirecting to dashboard…');
+            btn.innerHTML = '<i class="fa fa-check me-2"></i>Verified';
+            stopCam();
+            setTimeout(() => { window.location.href = json.redirect || '/moderator_dashboard/'; }, 800);
+        } else {
+            faceStatus('error', json.message || 'Face not recognized. Please try again.');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa fa-check me-2"></i>Verify';
+            showFaceBtn('retry');
+        }
+    } catch (err) {
+        faceStatus('error', 'Network error. Please retry.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-check me-2"></i>Verify';
+        showFaceBtn('retry');
+    }
+}
+
+/* Close on overlay click */
+document.getElementById('face-modal-overlay').addEventListener('click', function(e) {
+    if (e.target === this) faceCancel();
+});
 </script>
 {% endblock %}
