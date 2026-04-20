@@ -1,33 +1,84 @@
 {% extends 'analytics_app/base.html' %}
 {% load dict_extras %}
 
-{% block title %}Result{% endblock %}
+{% block title %}Results — {{ file.file.name|slice:"40:" }}{% endblock %}
 
 {% block content %}
-<section class="result-section container py-5 fade-in">
-        <h1 class="mb-4 text-primary fw-bold"><i class="fa fa-chart-bar"></i> Results</h1>
-        <p class="mb-4">Here you can see the results of your uploaded data.</p>
+<div class="container-fluid py-4 fade-in" style="max-width:1400px;">
 
-        <!-- Data Preview Section -->
-        {% if data_preview %}
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center">
-                <span><i class="fa fa-eye"></i> Data Preview (First 50 Rows)</span>
+    <!-- ── Header row ────────────────────────────────────────────────── -->
+    <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-3 mb-4">
+        <div>
+            <p class="section-label">Analysis Complete</p>
+            <h1 class="section-title mb-1"><i class="fa fa-chart-line me-2" style="color:var(--accent);"></i>Data Results</h1>
+            <p style="font-size:.875rem;color:var(--text-muted);margin:0;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                <strong style="color:var(--text);">{{ file.file.name|slice:"8:" }}</strong>
+            </p>
+        </div>
+        
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-primary btn-sm px-3 shadow-none" data-bs-toggle="modal" data-bs-target="#chartModal">
+                <i class="fa fa-chart-pie me-1"></i> Chart Builder
+            </button>
+            <a href="{% url 'full_data' file.id %}" class="btn btn-outline-primary btn-sm px-3">
+                <i class="fa fa-table me-1"></i> View Full Data
+            </a>
+            <div class="dropdown">
+                <button class="btn btn-outline-primary btn-sm px-3 dropdown-toggle shadow-none" type="button" data-bs-toggle="dropdown">
+                    <i class="fa fa-download me-1"></i> Export
+                </button>
+                <ul class="dropdown-menu glass-card p-2" style="font-size:.875rem;border:1px solid var(--accent);box-shadow:0 8px 32px var(--accent-glow);">
+                    <li><a class="dropdown-item" href="{% url 'generate_pdf_report' file.id %}" target="_blank"><i class="fa fa-file-pdf me-2" style="color:#ef4444;"></i>PDF Report</a></li>
+                    <li><hr class="dropdown-divider border-secondary my-1"></li>
+                    <li><button class="dropdown-item" onclick="exportResults('csv')"><i class="fa fa-file-csv me-2" style="color:#10b981;"></i>Export CSV</button></li>
+                    <li><button class="dropdown-item" onclick="exportResults('json')"><i class="fa fa-file-code me-2" style="color:#f59e0b;"></i>Export JSON</button></li>
+                    <li><button class="dropdown-item" onclick="exportResults('excel')"><i class="fa fa-file-excel me-2" style="color:#6366f1;"></i>Export Excel</button></li>
+                </ul>
             </div>
-            <div class="card-body">
-                <div class="table-responsive" style="max-height: 400px; overflow-y: auto; overflow-x: auto;">
-                    <table id="previewTable" class="table table-striped table-hover table-sm">
-                        <thead>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- ── Left Column (Stats & Preview) ─────────────────────────── -->
+        <div class="col-lg-8 d-flex flex-column gap-4">
+            
+            <!-- AI Insights Panel -->
+            {% if insights %}
+            <div class="insight-panel glass-card p-4 position-relative overflow-hidden">
+                <div class="insight-glow"></div>
+                <h6 class="card-section-title mb-3" style="color:#a78bfa;display:flex;align-items:center;gap:8px;">
+                    <i class="fa fa-robot fa-lg"></i> AI Data Insights
+                </h6>
+                <div class="d-flex flex-column gap-2">
+                    {% for insight in insights %}
+                    <div class="insight-item">
+                        <i class="fa fa-sparkles insight-bullet"></i>
+                        <span>{{ insight }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Data Preview -->
+            {% if data_preview %}
+            <div class="glass-card overflow-hidden">
+                <div class="p-3 pb-0 d-flex justify-content-between align-items-center">
+                    <h6 class="card-section-title m-0"><i class="fa fa-eye me-2" style="color:var(--accent);"></i>Data Preview <span class="text-muted" style="font-size:.75rem;font-weight:400;">(First {{ data_preview|length }} rows)</span></h6>
+                </div>
+                <div class="table-responsive p-3" style="max-height:300px;overflow-y:auto;">
+                    <table class="table table-sm mb-0 preview-table">
+                        <thead style="position:sticky;top:0;z-index:5;">
                             <tr>
-                                {% for key, value in data_preview.0.items %}
-                                <th scope="col">{{ key }}</th>
+                                {% for key in data_preview.0.keys %}
+                                <th>{{ key }}</th>
                                 {% endfor %}
                             </tr>
                         </thead>
                         <tbody>
                             {% for row in data_preview %}
                             <tr>
-                                {% for key, value in row.items %}
+                                {% for value in row.values %}
                                 <td>{{ value }}</td>
                                 {% endfor %}
                             </tr>
@@ -35,366 +86,451 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="mt-3">
-                    <a href="{% url 'full_data' file.id %}" class="btn btn-outline-primary" target="_blank">
-                        <i class="fa fa-external-link-alt"></i> View All Data
-                    </a>
-                </div>
             </div>
-        </div>
-        {% endif %}
+            {% endif %}
 
-        <!-- Modal: Chart Selector -->
-        <div class="modal fade" id="chartModal" tabindex="-1" aria-labelledby="chartModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-md">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="chartModalLabel">Create a chart</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="chartForm">
-                            <div class="mb-3">
-                                <label class="form-label">Chart type</label>
-                                <div>
-                                    <div class="form-check form-check-inline">
-    <input class="form-check-input" type="radio" name="chartType" id="typeLine" value="line" checked>
-    <label class="form-check-label" for="typeLine">Line Chart</label>
-</div>
-<div class="form-check form-check-inline">
-    <input class="form-check-input" type="radio" name="chartType" id="typeBar" value="bar">
-    <label class="form-check-label" for="typeBar">Bar Chart</label>
-</div>
-<div class="form-check form-check-inline">
-    <input class="form-check-input" type="radio" name="chartType" id="typeHistogram" value="histogram">
-    <label class="form-check-label" for="typeHistogram">Histogram</label>
-</div>
-<div class="form-check form-check-inline">
-    <input class="form-check-input" type="radio" name="chartType" id="typePie" value="pie">
-    <label class="form-check-label" for="typePie">Pie Chart</label>
-</div>
-<div class="form-check form-check-inline">
-    <input class="form-check-input" type="radio" name="chartType" id="typeScatter" value="scatter">
-    <label class="form-check-label" for="typeScatter">Scatter Plot</label>
-</div>
-<div class="form-check form-check-inline">
-    <input class="form-check-input" type="radio" name="chartType" id="typeBoxplot" value="boxplot">
-    <label class="form-check-label" for="typeBoxplot">Box Plot</label>
-</div>
-<div class="form-check form-check-inline">
-    <input class="form-check-input" type="radio" name="chartType" id="typeCorrelation" value="correlation">
-    <label class="form-check-label" for="typeCorrelation">Correlation Matrix</label>
-</div>                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="yAxisSelect" class="form-label">Select Y-axis (Field to analyze)</label>
-                                <select class="form-select" id="yAxisSelect"></select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="xAxisSelect" class="form-label">Select X-axis (Field to group by)</label>
-                                <select class="form-select" id="xAxisSelect"></select>
-                            </div>
+            <!-- Area where user-generated charts will appear after modal generation -->
+            <div id="userChartsArea"></div>
 
-
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" id="generateChartBtn" class="btn btn-primary">Generate</button>
-                        <div class="btn-group" role="group" aria-label="Download Chart">
-                            <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                Download Chart
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#" data-format="png">PNG</a></li>
-                                <li><a class="dropdown-item" href="#" data-format="svg">SVG</a></li>
-                                <li><a class="dropdown-item" href="#" data-format="pdf">PDF</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Area where user-generated charts will appear after modal generation -->
-        <div id="userChartsArea" class="mt-4">
-        </div>
-
-        <!-- Area where selected arguments' stats will be shown -->
-        <div id="selectedStatsArea" class="row mt-4"></div>
-
-        <div class="row">
-                        <div class="mb-3">
-                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#chartModal">Open chart builder</button>
-                <a href="{% url 'missing_values_chart' file.id %}" class="btn btn-outline-secondary" target="_blank">Show Missing Values Chart</a>
-                <a href="{% url 'generate_pdf_report' file.id %}" class="btn btn-success" target="_blank"><i class="fa fa-file-pdf"></i> Generate PDF Report</a>
-                <button class="btn btn-info" onclick="exportResults('csv')"><i class="fa fa-download"></i> Export CSV</button>
-                <button class="btn btn-info" onclick="exportResults('json')"><i class="fa fa-download"></i> Export JSON</button>
-                <button class="btn btn-info" onclick="exportResults('excel')"><i class="fa fa-download"></i> Export Excel</button>
-        </div>
+            <!-- Column Statistics Grid -->
+            <div>
+                <h6 class="card-section-title mb-3"><i class="fa fa-calculator me-2" style="color:var(--accent);"></i>Column Statistics</h6>
+                <div class="row g-3">
                 {% for item in data %}
-                        {% with analysis=analysis_data|get_item:item.column_name %}
-                        <div class="col-md-6 mb-4">
-                                <div class="card shadow-sm border-primary">
-                                        <div class="card-body">
-                                                <h5 class="card-title text-primary fw-bold mb-2"><i class="fa fa-table"></i> {{ item.column_name }}</h5>
-                                                <p class="card-text mb-3">Total: <span class="badge bg-primary fs-5">{{ item.value }}</span></p>
-                                                <div class="row g-2 mb-3">
-                                                    <div class="col-6 col-md-4">
-                                                        <div class="p-2 border rounded text-center h-100" data-bs-toggle="tooltip" title="The average value.">
-                                                            <p class="text-muted mb-1 small"><i class="fa fa-calculator text-primary"></i> Mean</p>
-                                                            <h5 class="mb-0 fw-bold">{{ analysis.stats.mean|default:"-" }}</h5>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-6 col-md-4">
-                                                        <div class="p-2 border rounded text-center h-100" data-bs-toggle="tooltip" title="The middle value.">
-                                                            <p class="text-muted mb-1 small"><i class="fa fa-ruler-horizontal text-primary"></i> Median</p>
-                                                            <h5 class="mb-0 fw-bold">{{ analysis.stats.median|default:"-" }}</h5>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-6 col-md-4">
-                                                        <div class="p-2 border rounded text-center h-100" data-bs-toggle="tooltip" title="The minimum value.">
-                                                            <p class="text-muted mb-1 small"><i class="fa fa-arrow-down text-primary"></i> Min</p>
-                                                            <h5 class="mb-0 fw-bold">{{ analysis.stats.min|default:"-" }}</h5>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-6 col-md-4">
-                                                        <div class="p-2 border rounded text-center h-100" data-bs-toggle="tooltip" title="The maximum value.">
-                                                            <p class="text-muted mb-1 small"><i class="fa fa-arrow-up text-primary"></i> Max</p>
-                                                            <h5 class="mb-0 fw-bold">{{ analysis.stats.max|default:"-" }}</h5>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-6 col-md-4">
-                                                        <div class="p-2 border rounded text-center h-100" data-bs-toggle="tooltip" title="The standard deviation.">
-                                                            <p class="text-muted mb-1 small"><i class="fa fa-wave-square text-primary"></i> Std</p>
-                                                            <h5 class="mb-0 fw-bold">{{ analysis.stats.std|default:"-" }}</h5>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-6 col-md-4">
-                                                        <div class="p-2 border rounded text-center h-100" data-bs-toggle="tooltip" title="Type of data.">
-                                                            <p class="text-muted mb-1 small"><i class="fa fa-tag text-primary"></i> Type</p>
-                                                            <h5 class="mb-0 fw-bold">{{ analysis.data_type|capfirst }}</h5>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                {% if analysis.stats.missing > 0 %}
-                                                <div class="alert alert-warning py-2 mb-2 small"><i class="fa fa-question-circle"></i> {{ analysis.stats.missing }} Missing Values</div>
-                                                {% endif %}
-                                                {% if analysis.stats.outliers.count > 0 %}
-                                                <div class="alert alert-danger py-2 mb-2 small" data-bs-toggle="tooltip" title="Sample: {{ analysis.stats.outliers.values|join:', ' }}"><i class="fa fa-exclamation-triangle"></i> {{ analysis.stats.outliers.count }} Outliers Detected</div>
-                                                {% endif %}
-                                                
-                                        </div>
+                    {% with analysis=analysis_data|get_item:item.column_name %}
+                    <div class="col-md-6">
+                        <div class="glass-card p-3 h-100 col-stat-card">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h6 class="mb-0 fw-bold text-truncate" style="max-width:180px;color:var(--text);" title="{{ item.column_name }}">
+                                        {{ item.column_name }}
+                                    </h6>
+                                    <span class="type-badge {{ analysis.data_type }} mt-1 d-inline-block">{{ analysis.data_type|capfirst }}</span>
                                 </div>
+                                <div class="text-end">
+                                    <span style="font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">Rows</span>
+                                    <h5 class="mb-0 fw-bold" style="color:var(--accent-light);">{{ item.value }}</h5>
+                                </div>
+                            </div>
+
+                            <div class="stat-grid">
+                                <div class="stat-cell" title="Mean">
+                                    <span class="lbl"><i class="fa fa-calculator me-1"></i>Mean</span>
+                                    <span class="val">{{ analysis.stats.mean|floatformat:2|default:"—" }}</span>
+                                </div>
+                                <div class="stat-cell" title="Median">
+                                    <span class="lbl"><i class="fa fa-ruler-horizontal me-1"></i>Median</span>
+                                    <span class="val">{{ analysis.stats.median|floatformat:2|default:"—" }}</span>
+                                </div>
+                                <div class="stat-cell" title="Min">
+                                    <span class="lbl"><i class="fa fa-arrow-down me-1"></i>Min</span>
+                                    <span class="val">{{ analysis.stats.min|floatformat:2|default:"—" }}</span>
+                                </div>
+                                <div class="stat-cell" title="Max">
+                                    <span class="lbl"><i class="fa fa-arrow-up me-1"></i>Max</span>
+                                    <span class="val">{{ analysis.stats.max|floatformat:2|default:"—" }}</span>
+                                </div>
+                                <div class="stat-cell" title="Standard Deviation">
+                                    <span class="lbl"><i class="fa fa-wave-square me-1"></i>Std Dev</span>
+                                    <span class="val">{{ analysis.stats.std|floatformat:2|default:"—" }}</span>
+                                </div>
+                                <div class="stat-cell" title="Null/Missing Values">
+                                    <span class="lbl"><i class="fa fa-question-circle me-1"></i>Missing</span>
+                                    <span class="val {% if analysis.stats.missing > 0 %}text-warning{% endif %}">{{ analysis.stats.missing|default:"0" }}</span>
+                                </div>
+                            </div>
+                            
+                            {% if analysis.stats.outliers.count > 0 %}
+                            <div class="alert alert-danger mt-3 p-2 mb-0 d-flex align-items-center gap-2" style="font-size:.75rem;" title="Sample: {{ analysis.stats.outliers.values|join:', ' }}">
+                                <i class="fa fa-triangle-exclamation"></i>
+                                <span><strong>{{ analysis.stats.outliers.count }} Outliers</strong> detected</span>
+                            </div>
+                            {% endif %}
                         </div>
-                        {% endwith %}
+                    </div>
+                    {% endwith %}
                 {% empty %}
-                        <div class="col-12">
-                                <div class="alert alert-info d-flex align-items-center" role="alert">
-                                        <i class="fa fa-info-circle me-2"></i> No results found for this file.
-                                </div>
+                    <div class="col-12">
+                        <div class="glass-card p-4 text-center text-muted">
+                            <i class="fa fa-inbox fa-2x mb-2"></i>
+                            <p class="mb-0">No statistical results found for this file.</p>
                         </div>
+                    </div>
                 {% endfor %}
+                </div>
+            </div>
         </div>
 
-{% endblock %}
-{% block extra_js %}
-<!-- jQuery & DataTables -->
-<link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+        <!-- ── Right Column (Heatmap) ────────────────────────────────── -->
+        <div class="col-lg-4">
+            {% if corr_matrix_json != 'null' %}
+            <div class="glass-card p-4 h-100 position-sticky" style="top:90px;">
+                <h6 class="card-section-title mb-1"><i class="fa fa-th me-2" style="color:var(--accent);"></i>Correlation Matrix</h6>
+                <p class="text-muted" style="font-size:.75rem;margin-bottom:20px;">Displays relationship between numeric features.</p>
+                
+                <div class="d-flex justify-content-center align-items-center overflow-auto" style="min-height:300px;">
+                    <canvas id="corrHeatmapCanvas" style="max-width:100%;"></canvas>
+                </div>
 
+                <div class="d-flex justify-content-between align-items-center mt-4" style="font-size:.7rem;color:var(--text-muted);">
+                    <div class="d-flex align-items-center gap-1"><span style="width:12px;height:12px;background:#ef4444;border-radius:3px;"></span> Negative (-1)</div>
+                    <div class="d-flex align-items-center gap-1"><span style="width:12px;height:12px;background:#94a3b8;border-radius:3px;"></span> Neutral (0)</div>
+                    <div class="d-flex align-items-center gap-1"><span style="width:12px;height:12px;background:#3b82f6;border-radius:3px;"></span> Positive (1)</div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ── Chart Builder Modal ────────────────────────────────────────────── -->
+<div class="modal fade" id="chartModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card border-accent" style="background:var(--bg2);">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title card-section-title"><i class="fa fa-chart-pie me-2" style="color:var(--accent);"></i>Build a Chart</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="chartForm">
+                    <label class="form-label-custom mb-2">Chart Type</label>
+                    <div class="row g-2 mb-4">
+                        <div class="col-4">
+                            <label class="chart-type-btn w-100 h-100">
+                                <input type="radio" name="chartType" value="line" checked class="d-none">
+                                <div class="inner"><i class="fa fa-chart-line mb-1"></i><br>Line</div>
+                            </label>
+                        </div>
+                        <div class="col-4">
+                            <label class="chart-type-btn w-100 h-100">
+                                <input type="radio" name="chartType" value="bar" class="d-none">
+                                <div class="inner"><i class="fa fa-chart-bar mb-1"></i><br>Bar</div>
+                            </label>
+                        </div>
+                        <div class="col-4">
+                            <label class="chart-type-btn w-100 h-100">
+                                <input type="radio" name="chartType" value="histogram" class="d-none">
+                                <div class="inner"><i class="fa fa-chart-column mb-1"></i><br>Hist</div>
+                            </label>
+                        </div>
+                        <div class="col-4">
+                            <label class="chart-type-btn w-100 h-100">
+                                <input type="radio" name="chartType" value="pie" class="d-none">
+                                <div class="inner"><i class="fa fa-chart-pie mb-1"></i><br>Pie</div>
+                            </label>
+                        </div>
+                        <div class="col-4">
+                            <label class="chart-type-btn w-100 h-100">
+                                <input type="radio" name="chartType" value="scatter" class="d-none">
+                                <div class="inner"><i class="fa fa-braille mb-1"></i><br>Scatter</div>
+                            </label>
+                        </div>
+                        <div class="col-4">
+                            <label class="chart-type-btn w-100 h-100">
+                                <input type="radio" name="chartType" value="boxplot" class="d-none">
+                                <div class="inner"><i class="fa fa-box fs-6 mb-1"></i><br>Boxplot</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3" id="xAxisContainer">
+                        <label for="xAxisSelect" class="form-label-custom">X-Axis (Group By)</label>
+                        <select class="form-select custom-select" id="xAxisSelect"></select>
+                    </div>
+                    <div class="mb-2" id="yAxisContainer">
+                        <label for="yAxisSelect" class="form-label-custom">Y-Axis (Analyze)</label>
+                        <select class="form-select custom-select" id="yAxisSelect"></select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-top-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary btn-sm px-3" data-bs-dismiss="modal">Cancel</button>
+                <div class="btn-group">
+                    <button type="button" id="generateChartBtn" class="btn btn-primary btn-sm px-4"><i class="fa fa-wand-magic-sparkles me-2"></i>Generate</button>
+                    <button type="button" class="btn btn-primary btn-sm dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end glass-card p-1" style="font-size:.875rem;">
+                        <li><h6 class="dropdown-header">Export Chart</h6></li>
+                        <li><a class="dropdown-item chart-dl-btn" href="#" data-format="png">PNG Image</a></li>
+                        <li><a class="dropdown-item chart-dl-btn" href="#" data-format="svg">Vector SVG</a></li>
+                        <li><a class="dropdown-item chart-dl-btn" href="#" data-format="pdf">PDF File</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Reset some Bootstrap base values */
+ul.dropdown-menu .dropdown-item { color:var(--text);border-radius:6px;transition:all .2s; }
+ul.dropdown-menu .dropdown-item:hover { background:var(--surface-hover);color:var(--accent-light); }
+
+.section-label { font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent); }
+.section-title { font-family:'Space Grotesk',sans-serif;font-size:clamp(1.4rem,3vw,2rem);font-weight:700;color:var(--text); }
+.card-section-title { font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--text);font-size:1rem;margin:0; }
+
+/* Insight Panel */
+.insight-panel { border:1px solid rgba(139,92,246,0.3);background:linear-gradient(145deg,rgba(194,194,255,0.5),rgba(99,102,241,0.05)); }
+.insight-glow { position:absolute;top:-50px;right:-50px;width:150px;height:150px;background:#7c3aed;filter:blur(80px);opacity:0.2;pointer-events:none; }
+.insight-item { font-size:.875rem;line-height:1.6;color:var(--text);display:flex;align-items:flex-start;gap:10px;padding:8px 12px;background:var(--surface);border-radius:8px;transition:background .2s; }
+.insight-item:hover { background:rgba(99,102,241,0.1); }
+.insight-bullet { color:#a78bfa;font-size:.8rem;margin-top:4px; }
+
+/* Table overrides */
+.preview-table { --bs-table-color:var(--text); --bs-table-bg:transparent; --bs-table-striped-bg:transparent; border-color:var(--border); color:var(--text) !important; }
+.preview-table thead th { background:var(--bg2) !important; color:var(--text-muted) !important; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; font-weight:600; border-bottom:1px solid var(--border); padding:10px; }
+.preview-table tbody td { color:var(--text) !important; padding:8px 10px; font-size:.8rem; border-bottom:1px solid var(--border); white-space:nowrap; }
+.preview-table tbody tr:hover td { background:var(--surface-hover) !important; }
+
+/* Column Stats */
+.col-stat-card { transition:transform .2s;border:1px solid var(--border); }
+.col-stat-card:hover { transform:translateY(-2px);border-color:rgba(99,102,241,0.3);box-shadow:0 8px 24px rgba(0,0,0,0.2); }
+.stat-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:8px; }
+.stat-cell { background:var(--surface);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;justify-content:center; }
+.stat-cell .lbl { font-size:.65rem;color:var(--text-muted);text-transform:uppercase;margin-bottom:2px;font-weight:600;letter-spacing:.02em; }
+.stat-cell .val { font-size:.9rem;font-weight:700;color:var(--text);font-family:'Space Grotesk',sans-serif; }
+
+.type-badge { font-size:.65rem;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:.04em; }
+.type-badge.numeric { background:rgba(99,102,241,.15);color:#818cf8; }
+.type-badge.categorical { background:rgba(245,158,11,.15);color:#fbbf24; }
+.type-badge.text { background:rgba(16,185,129,.15);color:#34d399; }
+.type-badge.datetime { background:rgba(236,72,153,.15);color:#f472b6; }
+
+/* Chart Builder */
+.form-label-custom { font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text);display:block; }
+.chart-type-btn { cursor:pointer; }
+.chart-type-btn .inner { background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;font-size:.75rem;font-weight:600;color:var(--text-muted);transition:all .2s; }
+.chart-type-btn input:checked + .inner { border-color:var(--accent);background:rgba(99,102,241,0.15);color:var(--accent-light);transform:scale(0.96); }
+.custom-select { background-color:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:.875rem; }
+.custom-select:focus { background-color:var(--surface);color:var(--text);border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow); }
+</style>
+{% endblock %}
+
+{% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Initialize DataTables
-    if ($.fn.DataTable.isDataTable('#previewTable')) {
-        $('#previewTable').DataTable().destroy();
-    }
-    $('#previewTable').DataTable({
-        pageLength: 5,
-        lengthMenu: [5, 10, 25, 50],
-        language: { search: "Quick Filter:" }
-    });
-
-    // Initialize tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl)
-    })
-
-    // Modal is now opened only when user clicks the button
-
     const generateChartBtn = document.getElementById('generateChartBtn');
     const chartModalEl = document.getElementById('chartModal');
+    if (chartModalEl) {
+        // Move modal to body to dodge bootstrap backdrop z-index traps
+        document.body.appendChild(chartModalEl);
+    }
+
     const userChartsArea = document.getElementById('userChartsArea');
     const xAxisSelect = document.getElementById('xAxisSelect');
     const yAxisSelect = document.getElementById('yAxisSelect');
-    const yAxisContainer = document.getElementById('yAxisSelect').parentElement;
+    const xAxisContainer = document.getElementById('xAxisContainer');
+    const yAxisContainer = document.getElementById('yAxisContainer');
     const xAxisLabel = document.querySelector('label[for="xAxisSelect"]');
-    const numericFields = {{ numeric_fields_json|safe }} || [];
-    const categoricalFields = {{ categorical_fields_json|safe }} || [];
-    function populateSelectors() {
-        const chartType = document.querySelector('input[name="chartType"]:checked').value;
-
-        xAxisSelect.innerHTML = '';
-        yAxisSelect.innerHTML = '';
-
-        if (chartType === 'line' || chartType === 'bar') {
-            xFields = categoricalFields;
-            yFields = numericFields;
-        } else if (chartType === 'scatter') {
-            xFields = numericFields;
-            yFields = numericFields;
-        } else if (chartType === 'pie') {
-            xFields = categoricalFields;
-            yFields = []; // Pie chart only needs X-axis (categorical)
-        } else if (chartType === 'boxplot' || chartType === 'histogram') {
-            xFields = numericFields;
-            yFields = []; // Boxplot and Histogram only need X-axis (numeric)
-        } else if (chartType === 'correlation') {
-            xFields = []; // Correlation matrix doesn't need explicit X/Y from user
-            yFields = [];
-        }
-
-        xFields.forEach(field => {
-            const option = document.createElement('option');
-            option.value = field;
-            option.textContent = field;
-            xAxisSelect.appendChild(option);
-        });
-
-        yFields.forEach(field => {
-            const option = document.createElement('option');
-            option.value = field;
-            option.textContent = field;
-            yAxisSelect.appendChild(option);
-        });
-    }
-
-    const xAxisContainer = document.getElementById('xAxisSelect').parentElement;
     const yAxisLabel = document.querySelector('label[for="yAxisSelect"]');
+    
+    // Safety check parsing context fields
+    let numericFields = [], categoricalFields = [];
+    try { numericFields = {{ numeric_fields_json|safe|default:"[]" }}; } catch(e){}
+    try { categoricalFields = {{ categorical_fields_json|safe|default:"[]" }}; } catch(e){}
 
-    function toggleYAxis() {
-        const chartType = document.querySelector('input[name="chartType"]:checked').value;
+    function populateSelectors() {
+        const typeEl = document.querySelector('input[name="chartType"]:checked');
+        if(!typeEl) return;
+        const chartType = typeEl.value;
+
+        xAxisSelect.innerHTML = ''; yAxisSelect.innerHTML = '';
+        let xFields = [], yFields = [];
+
+        if (chartType === 'line' || chartType === 'bar') { xFields = categoricalFields.length ? categoricalFields : numericFields; yFields = numericFields; }
+        else if (chartType === 'scatter') { xFields = numericFields; yFields = numericFields; }
+        else if (chartType === 'pie') { xFields = categoricalFields.length ? categoricalFields : numericFields; yFields = []; }
+        else if (chartType === 'boxplot' || chartType === 'histogram') { xFields = numericFields; yFields = []; }
+
+        xFields.forEach(f => xAxisSelect.add(new Option(f,f)));
+        yFields.forEach(f => yAxisSelect.add(new Option(f,f)));
+
         if (chartType === 'histogram' || chartType === 'pie' || chartType === 'boxplot') {
             yAxisContainer.style.display = 'none';
             xAxisContainer.style.display = 'block';
-            xAxisLabel.textContent = 'Select Field';
-        } else if (chartType === 'correlation') {
-            yAxisContainer.style.display = 'none';
-            xAxisContainer.style.display = 'none';
-        } else { // line, bar, scatter
+            xAxisLabel.textContent = 'Target Column';
+        } else {
             yAxisContainer.style.display = 'block';
             xAxisContainer.style.display = 'block';
-            xAxisLabel.textContent = 'Select X-axis (Field to group by)';
-            yAxisLabel.textContent = 'Select Y-axis (Field to analyze)';
+            xAxisLabel.textContent = 'X-Axis (Group/Time)';
+            yAxisLabel.textContent = 'Y-Axis (Metrics)';
         }
     }
 
-    chartModalEl.addEventListener('show.bs.modal', () => {
-        populateSelectors();
-        toggleYAxis();
-    });
+    if(chartModalEl){
+        chartModalEl.addEventListener('show.bs.modal', populateSelectors);
+        document.querySelectorAll('input[name="chartType"]').forEach(r => r.addEventListener('change', populateSelectors));
 
-    document.querySelectorAll('input[name="chartType"]').forEach(radio => {
-        radio.addEventListener('change', () => {
-            populateSelectors();
-            toggleYAxis();
-        });
-    });
+        generateChartBtn.addEventListener('click', function () {
+            const chartType = document.querySelector('input[name="chartType"]:checked').value;
+            const xAxis = xAxisSelect.value;
+            const yAxis = yAxisSelect.value;
+            const fileId = {{ file.id }};
 
-    generateChartBtn.addEventListener('click', function () {
-        const chartType = document.querySelector('input[name="chartType"]:checked').value;
-        const xAxis = xAxisSelect.value;
-        const yAxis = yAxisSelect.value;
-        const fileId = {{ file.id }};
+            if (!xAxis) { alert('Please select a target field.'); return; }
 
-        if (!xAxis && chartType !== 'correlation') {
-            alert('Please select a field for the X-axis.');
-            return;
-        }
+            let apiUrl = `/api/chart_data/${fileId}/?chart_type=${chartType}&x_axis=${encodeURIComponent(xAxis)}`;
+            if (yAxisContainer.style.display !== 'none' && yAxis) apiUrl += `&y_axis=${encodeURIComponent(yAxis)}`;
 
-        let apiUrl = `/api/chart_data/${fileId}/?chart_type=${chartType}`;
-        if (xAxis) apiUrl += `&x_axis=${xAxis}`;
-        if (yAxisContainer.style.display !== 'none' && yAxis) apiUrl += `&y_axis=${yAxis}`;
+            userChartsArea.innerHTML = `<div class="glass-card p-5 text-center mb-4"><i class="fa fa-circle-notch fa-spin fa-2x" style="color:var(--accent);"></i><p class="mt-2 text-muted">Building chart...</p></div>`;
 
-        userChartsArea.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted fw-bold">Building your interactive chart...</p></div>';
-
-        fetch(apiUrl)
-            .then(response => response.json())
-            .then(data => {
-                hideLoadingOverlay();
+            fetch(apiUrl).then(r => r.json()).then(data => {
+                if(typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
                 if (data.error) throw new Error(data.error);
 
-                userChartsArea.innerHTML = '<div class="card shadow-sm p-3 mb-4"><div style="height: 400px; width: 100%;"><canvas id="generatedChart"></canvas></div></div>';
+                userChartsArea.innerHTML = `
+                <div class="glass-card mb-4 overflow-hidden position-relative pt-3">
+                    <h6 class="card-section-title px-4 mb-3">${chartType.charAt(0).toUpperCase() + chartType.slice(1)} Chart</h6>
+                    <div style="height:350px;width:100%;padding:0 15px 15px;"><canvas id="generatedChart"></canvas></div>
+                </div>`;
+                
                 const ctx = document.getElementById('generatedChart').getContext('2d');
+                const rootStyle = getComputedStyle(document.body);
+                const txt = rootStyle.getPropertyValue('--text-muted').trim() || '#94a3b8';
+                const grid = 'rgba(255,255,255,0.05)';
 
-                let chartConfig = {
-                    type: chartType === 'correlation' ? 'bar' : chartType,
+                let config = {
+                    type: chartType,
                     data: {
                         labels: data.labels || data.x,
                         datasets: [{
-                            label: data.label || yAxis || 'Data',
+                            label: data.label || yAxis || xAxis,
                             data: data.data || data.y,
-                            backgroundColor: chartType === 'pie' ? ['#0C4B8E', '#1565c0', '#64b5f6', '#90caf9', '#e3f2fd', '#4A90E2', '#50E3C2', '#B8E986'] : 'rgba(12, 75, 142, 0.6)',
-                            borderColor: '#0C4B8E',
+                            backgroundColor: chartType==='pie' ? ['#6366f1','#10b981','#f59e0b','#ec4899','#8b5cf6','#06b6d4'] : 'rgba(99,102,241,0.4)',
+                            borderColor: chartType==='pie'?'var(--bg2)':'#818cf8',
                             borderWidth: 1,
-                            tension: 0.3
+                            borderRadius: chartType==='bar'?4:0,
+                            tension: 0.3,
+                            fill: true
                         }]
                     },
                     options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: chartType === 'pie' } }
+                        responsive: true, maintainAspectRatio: false,
+                        color: txt,
+                        plugins: { legend: { display: chartType==='pie', labels: { color: txt } } },
+                        scales: chartType==='pie' ? {} : {
+                            x: { grid: { color: grid }, ticks: { color: txt, maxRotation:45 } },
+                            y: { grid: { color: grid }, ticks: { color: txt, beginAtZero:true } }
+                        }
                     }
                 };
 
                 if (chartType === 'scatter') {
-                    chartConfig.data.labels = undefined;
-                    chartConfig.data.datasets[0].data = data.data; 
-                    chartConfig.options.scales = {
-                        x: { type: 'linear', position: 'bottom', title: { display: true, text: data.x_label } },
-                        y: { title: { display: true, text: data.y_label } }
-                    };
+                    config.data.labels = undefined;
+                    config.data.datasets[0].data = data.data; // [{x:, y:}]
+                    config.options.scales.x.type = 'linear';
+                    config.options.scales.x.title = {display:true, text:data.x_label, color:txt};
+                    config.options.scales.y.title = {display:true, text:data.y_label, color:txt};
                 }
 
-                new Chart(ctx, chartConfig);
-            })
-            .catch(err => {
-                hideLoadingOverlay();
-                userChartsArea.innerHTML = `<div class="alert alert-danger"><i class="fa fa-exclamation-triangle"></i> Failed to generate chart: ${err.message}</div>`;
-            });
+                new Chart(ctx, config);
 
-        // Handle download links
-        document.querySelectorAll('#chartModal .dropdown-item').forEach(item => {
-            item.addEventListener('click', function(e) {
-                e.preventDefault();
-                const format = this.dataset.format;
-                let downloadUrl = `/chart/${fileId}/?chart_type=${chartType}`;
-
-                if (xAxis) {
-                    downloadUrl += `&x_axis=${xAxis}`;
-                }
-
-                if (yAxisContainer.style.display !== 'none' && yAxis) {
-                    downloadUrl += `&y_axis=${yAxis}`;
-                }
-
-                downloadUrl += `&download=true&format=${format}`;
-                window.open(downloadUrl, '_blank');
+                const modal = bootstrap.Modal.getInstance(chartModalEl);
+                if(modal) modal.hide();
+            }).catch(e => {
+                if(typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
+                userChartsArea.innerHTML = `<div class="alert alert-danger"><i class="fa fa-triangle-exclamation"></i> ${e.message}</div>`;
             });
         });
 
-        const modal = bootstrap.Modal.getInstance(chartModalEl);
-        modal.hide();
-    });
+        // Downloads
+        document.querySelectorAll('.chart-dl-btn').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.preventDefault();
+                const chartType = document.querySelector('input[name="chartType"]:checked').value;
+                const xAxis = xAxisSelect.value;
+                const yAxis = yAxisSelect.value;
+                const format = btn.dataset.format;
+                let url = `/chart/{{ file.id }}/?chart_type=${chartType}&download=true&format=${format}&x_axis=${encodeURIComponent(xAxis)}`;
+                if (yAxisContainer.style.display !== 'none' && yAxis) url += `&y_axis=${encodeURIComponent(yAxis)}`;
+                window.open(url, '_blank');
+            });
+        });
+    }
 });
 
 function exportResults(format) {
-    const fileId = {{ file.id }};
-    const url = `/export/${fileId}/?format=${format}`;
-    window.open(url, '_blank');
+    window.open(`/export/{{ file.id }}/?format=${format}`, '_blank');
 }
+
+// Heatmap rendering
+(function() {
+    let matrixJSON, labels;
+    try {
+        matrixJSON = {{ corr_matrix_json|safe|default:"null" }};
+        labels = {{ corr_labels_json|safe|default:"[]" }};
+    } catch(e){}
+    
+    if (!matrixJSON || !labels || labels.length < 2) return;
+
+    const canvas = document.getElementById('corrHeatmapCanvas');
+    if (!canvas) return;
+    const n = labels.length;
+    // max cell size 50, map size constrained
+    const cellSize = Math.min(50, Math.floor(400 / n));
+    const padding = 80; // space for labels
+    canvas.width  = n * cellSize + padding;
+    canvas.height = n * cellSize + padding;
+    const ctx = canvas.getContext('2d');
+    ctx.translate(padding, 0);
+
+    const rootStyle = getComputedStyle(document.body);
+    const txtColor = rootStyle.getPropertyValue('--text-muted').trim() || '#94a3b8';
+
+    function corrColor(r) {
+        // Red (-1) -> Dark (0) -> Blue (1)
+        if(r === null) return 'var(--surface)';
+        if(r < 0) { // Negative: Red
+            const intensity = -r; // 0 to 1
+            return `rgba(239, 68, 68, ${intensity})`; // #ef4444
+        } else { // Positive: Blue
+            const intensity = r; // 0 to 1
+            return `rgba(59, 130, 246, ${intensity})`; // #3b82f6
+        }
+    }
+
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+            const val = matrixJSON[i][j];
+            ctx.fillStyle = corrColor(val);
+            ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+            ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+            ctx.strokeRect(j * cellSize, i * cellSize, cellSize, cellSize);
+            
+            // Only draw text if cell is big enough
+            if (cellSize > 30 && val !== null) {
+                ctx.fillStyle = (Math.abs(val) > 0.4) ? '#fff' : txtColor;
+                ctx.font = `500 ${Math.max(9, cellSize/4)}px 'Inter', sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(val.toFixed(2), j * cellSize + cellSize/2, i * cellSize + cellSize/2);
+            }
+        }
+        // y labels (left)
+        ctx.fillStyle = txtColor;
+        ctx.font = `${Math.max(10, cellSize/3)}px 'Inter', sans-serif`;
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        let lbl = labels[i];
+        if(lbl.length>10) lbl = lbl.substring(0,8)+'..';
+        ctx.fillText(lbl, -8, i * cellSize + cellSize/2);
+    }
+    // x labels (bottom) - rotated
+    for (let j = 0; j < n; j++) {
+        ctx.save();
+        ctx.translate(j * cellSize + cellSize/2, n * cellSize + 8);
+        ctx.rotate(-Math.PI / 4);
+        ctx.fillStyle = txtColor;
+        ctx.font = `${Math.max(10, cellSize/3)}px 'Inter', sans-serif`;
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        let lbl = labels[j];
+        if(lbl.length>10) lbl = lbl.substring(0,8)+'..';
+        ctx.fillText(lbl, 0, 0);
+        ctx.restore();
+    }
+})();
 </script>
 {% endblock %}

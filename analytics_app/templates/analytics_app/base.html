@@ -1,144 +1,427 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="{% if theme == 'dark' %}dark{% else %}light{% endif %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Analytics Website{% endblock %}</title>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <!-- Bootstrap CSS -->
+    <meta name="description" content="Analytics Website — upload CSV, JSON, XLSX files and get instant AI-powered data insights, charts, and statistics.">
+    <title>{% block title %}DataLens Analytics{% endblock %} | DataLens</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'analytics_app/css/base.css' %}">
     <link rel="stylesheet" href="{% static 'analytics_app/css/layout.css' %}">
     <link rel="stylesheet" href="{% static 'analytics_app/css/components.css' %}">
     <link rel="stylesheet" href="{% static 'analytics_app/css/loading.css' %}">
-    <script src="{% static 'analytics_app/js/scripts.js' %}" defer></script>
+
     <style>
-        body { font-family: 'Inter', Arial, sans-serif; }
-        .fade-in { animation: fadeIn 0.7s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        /* Apply the visual header background and rounding here so the rounded corners are visible
-           even if the navbar children stretch full-width. The navbar itself should be transparent. */
-        header {
-            background: linear-gradient(90deg, #0C4B8E 60%, #1565c0 100%);
-            box-shadow: 0 2px 8px rgba(12,75,142,0.08);
-            border-bottom-left-radius: 25px;
-            border-bottom-right-radius: 25px;
-            overflow: hidden; /* clip nav children to the rounded corners */
+        /* ── CSS Variables ──────────────────────────────────── */
+        :root {
+            --accent:       #6366f1;
+            --accent-light: #818cf8;
+            --accent-glow:  rgba(99,102,241,0.35);
+            --bg:           #0f0f1a;
+            --bg2:          #1a1a2e;
+            --bg3:          #16213e;
+            --surface:      rgba(255,255,255,0.04);
+            --surface-hover:rgba(255,255,255,0.08);
+            --border:       rgba(255,255,255,0.09);
+            --text:         #e2e8f0;
+            --text-muted:   #94a3b8;
+            --success:      #10b981;
+            --warning:      #f59e0b;
+            --danger:       #ef4444;
+            --radius:       16px;
+            --nav-h:        68px;
+            --transition:   0.25s cubic-bezier(.4,0,.2,1);
         }
-        .navbar {
-            background: transparent !important; /* let header provide the visible background */
-            box-shadow: none;
-            border-radius: 0;
-            overflow: visible;
+        [data-theme="light"] {
+            --bg:           #f8faff;
+            --bg2:          #eef2ff;
+            --bg3:          #e0e7ff;
+            --surface:      rgba(99,102,241,0.05);
+            --surface-hover:rgba(99,102,241,0.10);
+            --border:       rgba(99,102,241,0.15);
+            --text:         #1e293b;
+            --text-muted:   #64748b;
+            --accent-glow:  rgba(99,102,241,0.18);
         }
-        .navbar-brand {
+
+        /* ── Reset / Base ───────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
             display: flex;
-            align-items: center;
-            gap: 8px;
+            flex-direction: column;
+            transition: background var(--transition), color var(--transition);
+        }
+        main { flex: 1; }
+
+        /* ── Animated background gradient ──────────────────── */
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 20% -10%, rgba(99,102,241,0.18) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80%  110%, rgba(139,92,246,0.14) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        main, header, footer { position: relative; z-index: 1; }
+
+        /* ── Navbar ─────────────────────────────────────────── */
+        header {
+            min-height: var(--nav-h);
+            background: rgba(15,15,26,0.82);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 100;
+        }
+        [data-theme="light"] header {
+            background: rgba(248,250,255,0.85);
+        }
+        .navbar { min-height: var(--nav-h); background: transparent !important; box-shadow: none; padding: 0 1rem; }
+        .navbar-toggler:focus { box-shadow: none; outline: none; }
+        .navbar-brand {
+            font-family: 'Space Grotesk', sans-serif;
             font-weight: 700;
-            font-size: 1.5rem;
+            font-size: 1.35rem;
+            color: var(--text) !important;
+            display: flex; align-items: center; gap: 10px;
         }
-        .navbar-brand svg {
-            width: 32px; height: 32px;
+        .brand-logo {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--accent), #a78bfa);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 14px var(--accent-glow);
         }
+        .brand-logo i { color: #fff; font-size: 1rem; }
         .nav-link {
+            color: var(--text-muted) !important;
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 6px 14px !important;
             border-radius: 8px;
-            margin-right: 8px;
-            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+            transition: all var(--transition);
+            display: flex; align-items: center; gap: 6px;
         }
-        .nav-link:hover {
-            background: #1565c0;
+        .nav-link:hover, .nav-link.active {
+            color: var(--text) !important;
+            background: var(--surface-hover);
+        }
+        .btn-nav-cta {
+            background: linear-gradient(135deg, var(--accent), #7c3aed);
+            color: #fff !important;
+            font-weight: 600;
+            padding: 7px 18px !important;
+            border-radius: 10px;
+            box-shadow: 0 4px 14px var(--accent-glow);
+            transition: all var(--transition);
+        }
+        .btn-nav-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 20px var(--accent-glow); }
+        #themeToggle {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all var(--transition);
+        }
+        #themeToggle:hover { background: var(--surface-hover); color: var(--text); }
+
+        /* ── Cards ──────────────────────────────────────────── */
+        .glass-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all var(--transition);
+        }
+        .glass-card:hover { border-color: rgba(99,102,241,0.3); box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+
+        /* ── Buttons ────────────────────────────────────────── */
+        .btn-primary, .btn-purple {
+            background: linear-gradient(135deg, var(--accent) 0%, #7c3aed 100%);
+            border: none; color: #fff; font-weight: 600;
+            border-radius: 10px;
+            box-shadow: 0 4px 14px var(--accent-glow);
+            transition: all var(--transition);
+        }
+        .btn-primary:hover, .btn-purple:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--accent-glow);
+            background: linear-gradient(135deg, #818cf8 0%, #9333ea 100%);
             color: #fff;
-            box-shadow: 0 2px 8px rgba(12,75,142,0.12);
         }
+        .btn-outline-primary {
+            border: 1.5px solid var(--accent);
+            color: var(--accent);
+            border-radius: 10px;
+            background: transparent;
+            font-weight: 600;
+            transition: all var(--transition);
+        }
+        .btn-outline-primary:hover {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 4px 14px var(--accent-glow);
+        }
+
+        /* ── Alerts (Bootstrap override) ────────────────────── */
+        .alert { border-radius: 12px; border: none; font-size: 0.9rem; }
+        .alert-danger  { background: rgba(239,68,68,0.12);  color: #fca5a5; }
+        .alert-success { background: rgba(16,185,129,0.12); color: #6ee7b7; }
+        .alert-info    { background: rgba(99,102,241,0.12); color: #a5b4fc; }
+        .alert-warning { background: rgba(245,158,11,0.12); color: #fcd34d; }
+
+        /* ── Tables ─────────────────────────────────────────── */
+        .table {
+            color: var(--text);
+            --bs-table-bg: transparent;
+            --bs-table-striped-bg: var(--surface);
+            --bs-table-hover-bg: var(--surface-hover);
+            border-color: var(--border);
+        }
+        .table thead th {
+            background: var(--surface);
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            font-weight: 600;
+            border-color: var(--border);
+        }
+
+        /* ── Badges / Stat Pills ─────────────────────────────── */
+        .stat-pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 14px;
+            border-radius: 999px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            font-size: 0.82rem; font-weight: 500;
+            color: var(--text-muted);
+        }
+        .stat-pill i { color: var(--accent); }
+
+        /* ── Footer ─────────────────────────────────────────── */
         footer {
-            background: linear-gradient(90deg, #0C4B8E 60%, #1565c0 100%);
-            color: #fff;
-            border-radius: 16px 16px 0 0;
-            box-shadow: 0 -2px 8px rgba(12,75,142,0.08);
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 2rem 1rem 1.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
         }
-        .footer-icons a {
-            color: #fff;
-            margin: 0 8px;
-            font-size: 1.2rem;
-            transition: color 0.2s;
+        .footer-link { color: var(--text-muted); text-decoration: none; transition: color var(--transition); }
+        .footer-link:hover { color: var(--accent); }
+        .footer-social a {
+            width: 36px; height: 36px;
+            border-radius: 9px;
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            display: inline-flex; align-items: center; justify-content: center;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: all var(--transition);
         }
-        .footer-icons a:hover {
-            color: #ffd700;
+        .footer-social a:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+        /* ── Fade in animation ───────────────────────────────── */
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* ── Scrollbar ───────────────────────────────────────── */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+        /* ── Toast notifications ─────────────────────────────── */
+        #toast-container {
+            position: fixed; bottom: 24px; right: 24px;
+            display: flex; flex-direction: column; gap: 10px;
+            z-index: 9999;
         }
+        .toast-msg {
+            padding: 14px 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(16px);
+            font-size: 0.875rem; font-weight: 500;
+            display: flex; align-items: center; gap: 10px;
+            animation: slideUp .3s ease both;
+            min-width: 280px;
+        }
+        .toast-msg.success { background: rgba(16,185,129,0.15); color: #6ee7b7; border-color: rgba(16,185,129,0.3); }
+        .toast-msg.error   { background: rgba(239,68,68,0.15);   color: #fca5a5; border-color: rgba(239,68,68,0.3); }
+        .toast-msg.info    { background: rgba(99,102,241,0.15);  color: #a5b4fc; border-color: rgba(99,102,241,0.3); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ── Messages (Django) → Toast ───────────────────────── */
+        .django-messages { display: none; }
     </style>
+    {% block extra_head %}{% endblock %}
 </head>
-<body class="fade-in {% if theme == 'dark' %}dark-mode{% endif %}">
+<body class="{% if request.session.theme == 'dark' or not request.session.theme %}dark-mode{% endif %}">
+
+    <div class="background-animation">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+    </div>
+
+    <!-- ── Navbar ────────────────────────────────────────────── -->
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
-            <div class="container-fluid">
+        <nav class="navbar navbar-expand-lg">
+            <div class="container-fluid px-3">
                 <a class="navbar-brand" href="{% url 'home' %}">
-                    <!-- Simple analytics SVG icon -->
-                    <svg fill="none" viewBox="0 0 32 32"><rect x="4" y="20" width="4" height="8" rx="2" fill="#fff"/><rect x="12" y="12" width="4" height="16" rx="2" fill="#fff"/><rect x="20" y="6" width="4" height="22" rx="2" fill="#fff"/><rect x="28" y="2" width="4" height="26" rx="2" fill="#fff"/></svg>
-                    Analytics Website
+                    <span class="brand-logo"><i class="fa fa-chart-line"></i></span>
+                    DataLens
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="color:var(--text-muted);">
+                    <i class="fa fa-bars"></i>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto">
+                    <ul class="navbar-nav mx-auto gap-1">
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'home' %}"><i class="fa fa-home"></i> Home</a>
+                            <a class="nav-link" href="{% url 'home' %}"><i class="fa fa-house fa-sm"></i> Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'upload' %}"><i class="fa fa-upload"></i> Upload</a>
+                            <a class="nav-link" href="{% url 'upload' %}"><i class="fa fa-cloud-arrow-up fa-sm"></i> Upload</a>
                         </li>
                         {% if request.user.is_authenticated %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'my_uploads' %}"><i class="fa fa-history"></i> My Uploads</a>
-                            </li>
-                            {% if request.user.is_staff or request.user.is_superuser %}
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{% url 'admin_dashboard' %}"><i class="fa fa-user-shield"></i> Moderator Dashboard</a>
-                                </li>
-                            {% endif %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'logout' %}"><i class="fa fa-sign-out-alt"></i> Logout</a>
-                            </li>
-                        {% else %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'login' %}"><i class="fa fa-sign-in-alt"></i> Login</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'register' %}"><i class="fa fa-user-plus"></i> Register</a>
-                            </li>
-                        {% endif %}
-                        <li class="nav-item ms-lg-2 mt-2 mt-lg-0" style="display: flex; align-items: center;">
-                            <button id="themeToggle" class="btn btn-outline-light nav-link" style="padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: transparent; cursor: pointer;">
-                                <i class="fa fa-moon"></i>
-                            </button>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'my_uploads' %}"><i class="fa fa-clock-rotate-left fa-sm"></i> My Files</a>
                         </li>
+                        {% if request.user.is_staff or request.user.is_superuser %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'admin_dashboard' %}"><i class="fa fa-shield-halved fa-sm"></i> Dashboard</a>
+                        </li>
+                        {% endif %}
+                        {% endif %}
                     </ul>
+                    <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0 pb-3 pb-lg-0">
+                        <button id="themeToggle" title="Toggle theme">
+                            <i class="fa fa-moon fa-sm" id="themeIcon"></i>
+                        </button>
+                        {% if request.user.is_authenticated %}
+                            <span class="stat-pill"><i class="fa fa-user fa-sm"></i>{{ request.user.username }}</span>
+                            <form method="post" action="{% url 'logout' %}" class="d-inline m-0">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-primary btn-sm" style="padding:6px 14px;font-size:0.82rem;">
+                                    <i class="fa fa-right-from-bracket fa-sm"></i> Logout
+                                </button>
+                            </form>
+                        {% else %}
+                            <a href="{% url 'login' %}" class="nav-link"><i class="fa fa-right-to-bracket fa-sm"></i> Login</a>
+                            <a href="{% url 'register' %}" class="btn-nav-cta nav-link"><i class="fa fa-user-plus fa-sm"></i> Sign Up</a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </nav>
     </header>
+
+    <!-- ── Django Messages → Toasts ─────────────────────────── -->
+    {% if messages %}
+    <div class="django-messages">
+        {% for message in messages %}
+        <span data-level="{{ message.tags }}">{{ message }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <main class="container py-4">
         {% block content %}{% endblock %}
     </main>
-    <footer class="text-center py-4 mt-5">
-        <div class="footer-icons mb-2">
-            <a href="https://www.facebook.com/groups/183239481757120/"><i class="fab fa-facebook-f"></i></a>
-            <a href="https://x.com/djangoproject"><i class="fab fa-twitter"></i></a>
-            <a href="https://www.linkedin.com/company/django-software-foundation/"><i class="fab fa-linkedin-in"></i></a>
-            <a href="https://github.com/django/django"><i class="fab fa-github"></i></a>
+
+    <!-- ── Toast container ───────────────────────────────────── -->
+    <div id="toast-container"></div>
+
+    <!-- ── Footer ────────────────────────────────────────────── -->
+    <footer class="mt-5">
+        <div class="container">
+            <div class="row align-items-center g-3">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="brand-logo" style="width:28px;height:28px;font-size:.75rem;"><i class="fa fa-chart-line"></i></span>
+                        <strong style="color:var(--text);font-family:'Space Grotesk',sans-serif;">DataLens</strong>
+                    </div>
+                    <p class="mb-0" style="font-size:.8rem;">AI-powered data analytics, instantly.</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="footer-social d-flex justify-content-center gap-2">
+                        <a href="https://github.com" title="GitHub"><i class="fab fa-github"></i></a>
+                        <a href="https://twitter.com" title="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="https://linkedin.com" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <p class="mb-0" style="font-size:.8rem;">&copy; 2025 DataLens &mdash; Built by Gew &nbsp;🚀</p>
+                </div>
+            </div>
         </div>
-        <p class="mb-0">&copy; 2025 Analytics Website &mdash; Powered by Gew</p>
     </footer>
-    <!-- Bootstrap JS -->
+
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="{% static 'analytics_app/js/scripts.js' %}" defer></script>
+
+    <script>
+    // ── Theme toggle ────────────────────────────────────────────
+    (function() {
+        const root   = document.documentElement;
+        const btn    = document.getElementById('themeToggle');
+        const icon   = document.getElementById('themeIcon');
+        let theme    = root.getAttribute('data-theme') || 'dark';
+
+        function apply(t) {
+            root.setAttribute('data-theme', t);
+            icon.className = t === 'dark' ? 'fa fa-sun fa-sm' : 'fa fa-moon fa-sm';
+        }
+        apply(theme);
+        if (btn) btn.addEventListener('click', () => {
+            theme = theme === 'dark' ? 'light' : 'dark';
+            apply(theme);
+            fetch("{% url 'set_theme' %}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify({ theme })
+            });
+        });
+    })();
+
+    // ── Auto-show Django messages as toasts ─────────────────────
+    (function() {
+        const container = document.getElementById('toast-container');
+        document.querySelectorAll('.django-messages span').forEach(el => {
+            const level = el.dataset.level || 'info';
+            const cls   = level.includes('error')   ? 'error'
+                        : level.includes('success')  ? 'success'
+                        : 'info';
+            const icon  = cls === 'error' ? 'circle-xmark' : cls === 'success' ? 'circle-check' : 'circle-info';
+            const toast = document.createElement('div');
+            toast.className = `toast-msg ${cls}`;
+            toast.innerHTML = `<i class="fa fa-${icon}"></i> ${el.textContent}`;
+            container.appendChild(toast);
+            setTimeout(() => toast.style.opacity = '0', 4000);
+            setTimeout(() => toast.remove(), 4500);
+        });
+    })();
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

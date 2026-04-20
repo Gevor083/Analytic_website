@@ -3,42 +3,216 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<section class="hero text-center py-5 mb-5" style="background: linear-gradient(90deg, #0C4B8E 60%, #1565c0 100%); color: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(12,75,142,0.12);">
-    <div class="container">
-        <h1 class="display-4 fw-bold mb-3"><i class="fa fa-chart-line"></i> Welcome to Analytics Website</h1>
-        <p class="lead mb-4">Get professional insights and data analytics at your fingertips.</p>
-        <a href="{% url 'upload' %}" class="btn btn-lg btn-light text-primary fw-bold shadow-sm"><i class="fa fa-upload"></i> Upload Data</a>
+<!-- ── Hero ──────────────────────────────────────────────────── -->
+<section class="section text-center py-5 mb-5 fade-in">
+    <div class="container position-relative">
+        <!-- Floating decorative blobs -->
+        <div class="hero-blob hero-blob-1"></div>
+        <div class="hero-blob hero-blob-2"></div>
+
+        <div class="hero-badge mb-4">
+            <i class="fa fa-bolt fa-sm"></i> AI-Powered Analytics Platform
+        </div>
+
+        <h1 class="hero-title mb-4">
+            Transform Your Data<br>
+            Into <span class="hero-grad">Clear Insights</span>
+        </h1>
+        <p class="hero-subtitle mb-5">
+            Upload any CSV, JSON or Excel file and get instant statistics,<br>
+            interactive charts, outlier detection and AI-written insights.
+        </p>
+
+        <div class="d-flex justify-content-center flex-wrap gap-3 mb-5">
+            <a href="{% url 'upload' %}" class="btn btn-primary btn-lg px-5 py-3" id="hero-upload-btn">
+                <i class="fa fa-cloud-arrow-up me-2"></i>Upload File
+            </a>
+            {% if not request.user.is_authenticated %}
+            <a href="{% url 'register' %}" class="btn btn-outline-primary btn-lg px-5 py-3">
+                <i class="fa fa-user-plus me-2"></i>Get Started Free
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- Stats row -->
+        <div class="d-flex justify-content-center flex-wrap gap-4">
+            <div class="hero-stat"><span class="hero-stat-num">5+</span><span class="hero-stat-label">Chart Types</span></div>
+            <div class="hero-stat-divider"></div>
+            <div class="hero-stat"><span class="hero-stat-num">3</span><span class="hero-stat-label">File Formats</span></div>
+            <div class="hero-stat-divider"></div>
+            <div class="hero-stat"><span class="hero-stat-num">AI</span><span class="hero-stat-label">Insights</span></div>
+            <div class="hero-stat-divider"></div>
+            <div class="hero-stat"><span class="hero-stat-num">PDF</span><span class="hero-stat-label">Reports</span></div>
+        </div>
     </div>
 </section>
 
-<section class="features container mb-5">
+<!-- ── Feature Cards ─────────────────────────────────────────── -->
+<section class="container mb-5 fade-in" style="animation-delay:.1s">
+    <div class="text-center mb-4">
+        <p class="section-label">What you get</p>
+        <h2 class="section-title">Everything You Need to Analyse Data</h2>
+    </div>
     <div class="row g-4">
-        <div class="col-md-6">
-            <div class="card shadow-sm border-primary h-100">
-                <div class="card-body text-center">
-                    <div class="mb-3">
-                        <span class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:48px;height:48px;font-size:1.5rem;">
-                            <i class="fa fa-database"></i>
-                        </span>
-                    </div>
-                    <h5 class="card-title">Upload & Analyze</h5>
-                    <p class="card-text">Easily upload your CSV or JSON or XLSX files and get instant analytics.</p>
+        {% for feat in features %}
+        <div class="col-md-6 col-lg-4">
+            <div class="feat-card glass-card h-100 p-4">
+                <div class="feat-icon mb-3">
+                    <i class="fa {{ feat.icon }}"></i>
                 </div>
+                <h5 class="feat-title">{{ feat.title }}</h5>
+                <p class="feat-desc">{{ feat.desc }}</p>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card shadow-sm border-primary h-100">
-                <div class="card-body text-center">
-                    <div class="mb-3">
-                        <span class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:48px;height:48px;font-size:1.5rem;">
-                            <i class="fa fa-chart-bar"></i>
-                        </span>
-                    </div>
-                    <h5 class="card-title">Visual Insights</h5>
-                    <p class="card-text">View your data with beautiful charts, tables, and summary statistics.</p>
-                </div>
-            </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- ── How it works ──────────────────────────────────────────── -->
+<section class="container mb-5 fade-in" style="animation-delay:.2s">
+    <div class="text-center mb-4">
+        <p class="section-label">Dead simple</p>
+        <h2 class="section-title">Up and Running in 3 Steps</h2>
+    </div>
+    <div class="row g-4 justify-content-center">
+        <div class="col-md-4 text-center">
+            <div class="step-num">1</div>
+            <h6 class="step-title mt-3">Upload Your File</h6>
+            <p class="step-desc">Drag &amp; drop any CSV, JSON, or XLSX file — up to 30 MB.</p>
+        </div>
+        <div class="col-md-4 text-center">
+            <div class="step-num">2</div>
+            <h6 class="step-title mt-3">We Analyse It</h6>
+            <p class="step-desc">Our engine computes stats, detects outliers, and spots correlations instantly.</p>
+        </div>
+        <div class="col-md-4 text-center">
+            <div class="step-num">3</div>
+            <h6 class="step-title mt-3">Explore Results</h6>
+            <p class="step-desc">View interactive charts, download PDF reports, and export clean data.</p>
         </div>
     </div>
 </section>
+
+<!-- ── CTA Banner ────────────────────────────────────────────── -->
+<section class="cta-banner container mb-5 fade-in" style="animation-delay:.3s">
+    <div class="cta-inner text-center p-5">
+        <h3 class="cta-title mb-3">Ready to explore your data?</h3>
+        <p class="cta-sub mb-4">No credit card. No setup. Just upload and go.</p>
+        <a href="{% url 'upload' %}" class="btn btn-primary btn-lg px-5">
+            <i class="fa fa-rocket me-2"></i>Start Analysing Now
+        </a>
+    </div>
+</section>
+
+<style>
+/* ── Hero ─────────────────────────────────────────────────────── */
+.hero-section { position: relative; overflow: hidden; }
+.hero-blob {
+    position: absolute; border-radius: 50%;
+    filter: blur(80px); pointer-events: none; opacity: .18;
+}
+.hero-blob-1 { width: 400px; height: 400px; background: var(--accent); top: -120px; left: -80px; }
+.hero-blob-2 { width: 300px; height: 300px; background: #a78bfa; bottom: -80px; right: -60px; }
+
+.hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 18px;
+    background: rgba(99,102,241,0.12);
+    border: 1px solid rgba(99,102,241,0.3);
+    border-radius: 999px;
+    font-size: .82rem; font-weight: 600;
+    color: var(--accent-light);
+    letter-spacing: .04em;
+}
+.hero-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1.15;
+    color: var(--text);
+}
+.hero-grad {
+    background: linear-gradient(135deg, var(--accent), #a78bfa 60%, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.hero-subtitle {
+    font-size: 1.05rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+}
+.hero-stat { display: flex; flex-direction: column; align-items: center; }
+.hero-stat-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.6rem; font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), #a78bfa);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.hero-stat-label { font-size: .75rem; color: var(--text-muted); font-weight: 500; }
+.hero-stat-divider { width: 1px; height: 40px; background: var(--border); }
+
+/* ── Sections ─────────────────────────────────────────────────── */
+.section-label { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--accent); }
+.section-title { font-family: 'Space Grotesk', sans-serif; font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 700; color: var(--text); }
+
+/* ── Feature cards ─────────────────────────────────────────────── */
+.feat-card { transition: all .25s ease; cursor: default; }
+.feat-card:hover { transform: translateY(-4px); }
+.feat-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    background: rgba(99,102,241,0.12);
+    border: 1px solid rgba(99,102,241,0.25);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; color: var(--accent);
+}
+.feat-title { font-weight: 700; font-size: 1rem; color: var(--text); margin-bottom: .5rem; }
+.feat-desc  { font-size: .875rem; color: var(--text-muted); line-height: 1.6; margin: 0; }
+
+/* ── Steps ─────────────────────────────────────────────────────── */
+.step-num {
+    width: 56px; height: 56px; border-radius: 16px;
+    background: linear-gradient(135deg, var(--accent), #7c3aed);
+    color: #fff; font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.4rem; font-weight: 800;
+    display: inline-flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 24px var(--accent-glow);
+}
+.step-title { font-weight: 700; color: var(--text); }
+.step-desc  { font-size: .875rem; color: var(--text-muted); }
+
+/* ── CTA Banner ─────────────────────────────────────────────────── */
+.cta-inner {
+    background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.10));
+    border: 1px solid rgba(99,102,241,0.25);
+    border-radius: 24px;
+    backdrop-filter: blur(12px);
+}
+.cta-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem; font-weight: 700; color: var(--text); }
+.cta-sub   { color: var(--text-muted); }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Pass features from Django context — or define inline for the home page
+const featureData = [
+    { icon: 'fa-database',      title: 'Multi-format Upload',      desc: 'Upload CSV, JSON, or XLSX files up to 30 MB. We auto-convert everything to a clean format.' },
+    { icon: 'fa-chart-bar',     title: 'Interactive Charts',        desc: 'Line, bar, scatter, histogram, pie and boxplot charts — all rendered with Chart.js.' },
+    { icon: 'fa-robot',         title: 'AI Text Insights',          desc: 'Automatic detection of missing values, outliers, and strong correlations — explained in plain English.' },
+    { icon: 'fa-table-cells',   title: 'Correlation Heatmap',       desc: 'Visual heatmap showing how every numeric column relates to every other column.' },
+    { icon: 'fa-file-pdf',      title: 'PDF Reports',               desc: 'Download a polished PDF report of your analysis with one click.' },
+    { icon: 'fa-download',      title: 'Data Export',               desc: 'Export your cleaned data as CSV, JSON, or Excel — whatever format you need.' },
+];
+// Inject cards (avoids needing a Django context processor for this)
+document.querySelectorAll('.feat-card').forEach((card, i) => {
+    if (featureData[i]) {
+        card.querySelector('.feat-icon i').className = `fa ${featureData[i].icon}`;
+        card.querySelector('.feat-title').textContent = featureData[i].title;
+        card.querySelector('.feat-desc').textContent  = featureData[i].desc;
+    }
+});
+</script>
 {% endblock %}

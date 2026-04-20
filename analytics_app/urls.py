@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import health_check
+from .views import health_check, api_file_status
 
 urlpatterns = [
     path('', views.home_view, name='home'),
@@ -18,6 +18,7 @@ urlpatterns = [
     path('health/', health_check, name='health_check'),
     path('api/results/<int:file_id>/', views.api_analysis_results, name='api_analysis_results'),
     path('api/files/', views.api_all_files, name='api_all_files'),
+    path('api/status/<int:file_id>/', api_file_status, name='api_file_status'),
     path('generate_pdf_report/<int:file_id>/', views.generate_pdf_report_view, name='generate_pdf_report'),
     path('export/<int:file_id>/', views.export_results_view, name='export_results'),
     path('full_data/<int:file_id>/', views.full_data_view, name='full_data'),
@@ -25,3 +26,4 @@ urlpatterns = [
     path('set_theme/', views.set_theme, name='set_theme'),
     path('api/chart_data/<int:file_id>/', views.chart_data_api, name='chart_data_api'),
 ]
+

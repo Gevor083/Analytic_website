@@ -1,101 +1,266 @@
 {% extends 'analytics_app/base.html' %}
 
-{% block title %}My Uploads{% endblock %}
+{% block title %}My Files{% endblock %}
 
 {% block content %}
-<div class="container py-5 fade-in">
-    <div class="row justify-content-center">
-        <div class="col-md-10">
-            <div class="card shadow-sm border-primary">
-                <div class="card-body">
-                    <div class="text-center mb-4">
-                        <span class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:56px;height:56px;font-size:2rem;">
-                            <i class="fa fa-history"></i>
-                        </span>
-                        <h2 class="fw-bold mt-3 mb-1">My Uploads</h2>
-                        <p class="text-muted">Total uploaded files: <span class="badge bg-info">{{ total_uploaded_files }}</span></p>
-                        {% if last_upload_date %}
-                        <p class="text-muted">Last upload: <span class="badge bg-info">{{ last_upload_date|date:'Y-m-d H:i' }}</span></p>
-                        <p class="text-muted">Average rows per dataset: <span class="badge bg-info">{{ average_rows_per_dataset|floatformat:2 }}</span></p>
-                        {% endif %}
-                    </div>
+<div class="container py-4 fade-in">
 
-                    <!-- Upload Statistics -->
-                    <div class="row mb-4">
-                        <div class="col-md-4">
-                            <div class="card bg-light">
-                                <div class="card-body text-center">
-                                    <h5 class="card-title text-primary">{{ total_uploaded_files }}</h5>
-                                    <p class="card-text">Total Files Uploaded</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card bg-light">
-                                <div class="card-body text-center">
-                                    <h5 class="card-title text-primary">{{ last_upload_date|date:"M d, Y" }}</h5>
-                                    <p class="card-text">Last Upload Date</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card bg-light">
-                                <div class="card-body text-center">
-                                    <h5 class="card-title text-primary">{{ average_rows_per_dataset|floatformat:0 }}</h5>
-                                    <p class="card-text">Avg Rows per Dataset</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+    <!-- Header row -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+            <p class="section-label">My Account</p>
+            <h1 class="section-title mb-0">My Files</h1>
+        </div>
+        <a href="{% url 'upload' %}" class="btn btn-primary px-4">
+            <i class="fa fa-cloud-arrow-up me-2"></i>Upload New File
+        </a>
+    </div>
 
-                    {% if uploads %}
-                        <div class="table-responsive">
-                            <table class="table table-striped table-bordered align-middle rounded">
-                                <thead class="table-primary">
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>File Name</th>
-                                        <th>Uploaded At</th>
-                                        <th>File Type</th>
-                                        <th>File Size</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for file in uploads %}
-                                    <tr>
-                                        <td>{{ file.id }}</td>
-                                        <td><i class="fa fa-file-alt text-primary"></i> {{ file.file.name|slice:'8:' }}</td>
-                                        <td>{{ file.uploaded_at|date:'Y-m-d H:i' }}</td>
-                                        <td><span class="badge bg-primary">{{ file.file_type|upper }}</span></td>
-                                        <td>{{ file.size|filesizeformat }}</td>
-                                        <td>
-                                            <form action="{% url 'delete_file' file.id %}" method="post" class="d-inline">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-danger btn-sm" title="Delete File">
-                                                    <i class="fa fa-trash"></i>
-                                                </button>
-                                            </form>
-                                            <form action="{% url 'reanalyze_file' file.id %}" method="post" class="d-inline ms-2">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-primary btn-sm" title="Re-analyze File" onclick="return confirm('Are you sure you want to re-analyze this file?');">
-                                                    <i class="fa fa-sync-alt"></i>
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <div class="alert alert-info d-flex align-items-center" role="alert">
-                            <i class="fa fa-info-circle me-2"></i> You have not uploaded any files yet.
-                        </div>
-                    {% endif %}
-                </div>
+    <!-- Stat cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="stat-card glass-card p-3 text-center">
+                <div class="stat-card-icon" style="--c:#6366f1;"><i class="fa fa-file-lines"></i></div>
+                <div class="stat-card-num">{{ total_uploaded_files }}</div>
+                <div class="stat-card-label">Total Files</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card glass-card p-3 text-center">
+                <div class="stat-card-icon" style="--c:#10b981;"><i class="fa fa-circle-check"></i></div>
+                <div class="stat-card-num">{{ processed_count }}</div>
+                <div class="stat-card-label">Processed</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card glass-card p-3 text-center">
+                <div class="stat-card-icon" style="--c:#f59e0b;"><i class="fa fa-table-rows"></i></div>
+                <div class="stat-card-num">{{ average_rows_per_dataset|floatformat:0 }}</div>
+                <div class="stat-card-label">Avg Rows</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card glass-card p-3 text-center">
+                <div class="stat-card-icon" style="--c:#ec4899;"><i class="fa fa-clock"></i></div>
+                <div class="stat-card-num">{{ last_upload_date|date:"M d"|default:"—" }}</div>
+                <div class="stat-card-label">Last Upload</div>
             </div>
         </div>
     </div>
+
+    <!-- File list -->
+    {% if uploads %}
+    <!-- Search bar -->
+    <div class="d-flex gap-2 mb-3">
+        <div class="input-search-wrap flex-grow-1">
+            <i class="fa fa-magnifying-glass input-search-icon"></i>
+            <input type="text" id="fileSearch" class="form-ctrl-search" placeholder="Search files…">
+        </div>
+        <select id="typeFilter" class="form-ctrl-select">
+            <option value="">All types</option>
+            <option value="CSV">CSV</option>
+            <option value="JSON">JSON</option>
+            <option value="XLSX">XLSX</option>
+        </select>
+    </div>
+
+    <div class="glass-card overflow-hidden">
+        <div class="table-responsive">
+            <table class="table mb-0" id="uploadsTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>File</th>
+                        <th>Type</th>
+                        <th>Size</th>
+                        <th>Rows</th>
+                        <th>Status</th>
+                        <th>Uploaded</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for file in uploads %}
+                <tr data-type="{{ file.file_type|upper }}" data-name="{{ file.file.name }}">
+                    <td class="text-muted" style="font-size:.8rem;">{{ file.id }}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="file-type-icon {{ file.file_type }}">
+                                <i class="fa {% if file.file_type == 'csv' %}fa-file-csv{% elif file.file_type == 'json' %}fa-file-code{% else %}fa-file-excel{% endif %}"></i>
+                            </div>
+                            <span class="fw-500 file-name" style="font-size:.875rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                {{ file.file.name|slice:"40:" }}
+                            </span>
+                        </div>
+                    </td>
+                    <td><span class="type-badge {{ file.file_type }}">{{ file.file_type|upper }}</span></td>
+                    <td style="font-size:.82rem;color:var(--text-muted);">{{ file.size|filesizeformat }}</td>
+                    <td style="font-size:.82rem;color:var(--text-muted);">{{ file.num_rows|default:"—" }}</td>
+                    <td>
+                        {% if file.error_message %}
+                            <span class="status-badge error"><i class="fa fa-circle-xmark fa-sm"></i> Error</span>
+                        {% elif file.processed %}
+                            <span class="status-badge done"><i class="fa fa-circle-check fa-sm"></i> Done</span>
+                        {% else %}
+                            <span class="status-badge processing"><i class="fa fa-spinner fa-spin fa-sm"></i> Processing</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size:.82rem;color:var(--text-muted);">{{ file.uploaded_at|date:"M d, Y H:i" }}</td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            {% if file.processed and not file.error_message %}
+                            <a href="{% url 'result' file.id %}" class="action-btn primary" title="View Results">
+                                <i class="fa fa-chart-bar"></i>
+                            </a>
+                            {% endif %}
+                            <form action="{% url 'reanalyze_file' file.id %}" method="post" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="action-btn warning" title="Re-analyse">
+                                    <i class="fa fa-rotate-right"></i>
+                                </button>
+                            </form>
+                            <form action="{% url 'delete_file' file.id %}" method="post" class="d-inline"
+                                  onsubmit="return confirm('Delete this file permanently?')">
+                                {% csrf_token %}
+                                <button type="submit" class="action-btn danger" title="Delete">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="d-flex justify-content-center align-items-center gap-2 py-3 border-top" style="border-color:var(--border)!important;">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}" class="page-btn"><i class="fa fa-chevron-left fa-xs"></i></a>
+            {% endif %}
+            <span style="font-size:.82rem;color:var(--text-muted);">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="page-btn"><i class="fa fa-chevron-right fa-xs"></i></a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    {% else %}
+    <div class="glass-card p-5 text-center">
+        <div class="empty-icon mb-3"><i class="fa fa-inbox fa-2x" style="color:var(--text-muted);"></i></div>
+        <h5 style="color:var(--text);">No files yet</h5>
+        <p style="color:var(--text-muted);font-size:.875rem;">Upload your first dataset to get started.</p>
+        <a href="{% url 'upload' %}" class="btn btn-primary mt-2">
+            <i class="fa fa-cloud-arrow-up me-2"></i>Upload File
+        </a>
+    </div>
+    {% endif %}
+
 </div>
+
+<style>
+.section-label { font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent); }
+.section-title { font-family:'Space Grotesk',sans-serif;font-size:clamp(1.4rem,3vw,2rem);font-weight:700;color:var(--text); }
+
+/* Stat cards */
+.stat-card { transition:all .25s; }
+.stat-card:hover { transform:translateY(-3px); }
+.stat-card-icon {
+    width:44px;height:44px;border-radius:12px;margin:0 auto 10px;
+    background:rgba(from var(--c) r g b / 0.15);
+    background:color-mix(in srgb, var(--c) 18%, transparent);
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.1rem;color:var(--c,var(--accent));
+    border:1px solid color-mix(in srgb, var(--c) 30%, transparent);
+}
+.stat-card-num  { font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:700;color:var(--text); }
+.stat-card-label { font-size:.75rem;color:var(--text-muted);font-weight:500; }
+
+/* Search */
+.input-search-wrap { position:relative; }
+.input-search-icon { position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:.875rem; }
+.form-ctrl-search {
+    width:100%;padding:10px 14px 10px 36px;
+    background:var(--surface);border:1.5px solid var(--border);
+    border-radius:10px;color:var(--text);font-size:.875rem;outline:none;
+    transition:border .2s;
+}
+.form-ctrl-search:focus { border-color:var(--accent); }
+.form-ctrl-search::placeholder { color:var(--text-muted); }
+.form-ctrl-select {
+    padding:10px 14px;background:var(--surface);border:1.5px solid var(--border);
+    border-radius:10px;color:var(--text);font-size:.875rem;outline:none;
+    transition:border .2s; min-width:110px;
+}
+.form-ctrl-select:focus { border-color:var(--accent); }
+
+/* File icon */
+.file-type-icon {
+    width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.9rem;
+}
+.file-type-icon.csv   { background:rgba(16,185,129,.15);color:#10b981; }
+.file-type-icon.json  { background:rgba(245,158,11,.15);color:#f59e0b; }
+.file-type-icon.xlsx  { background:rgba(99,102,241,.15);color:#6366f1; }
+
+/* Type badge */
+.type-badge { font-size:.7rem;font-weight:700;padding:3px 8px;border-radius:6px;letter-spacing:.04em; }
+.type-badge.csv  { background:rgba(16,185,129,.15);color:#10b981; }
+.type-badge.json { background:rgba(245,158,11,.15);color:#f59e0b; }
+.type-badge.xlsx { background:rgba(99,102,241,.15);color:#6366f1; }
+
+/* Status badges */
+.status-badge { font-size:.72rem;font-weight:600;padding:3px 9px;border-radius:6px;display:inline-flex;align-items:center;gap:4px; }
+.status-badge.done       { background:rgba(16,185,129,.12); color:#10b981; }
+.status-badge.processing { background:rgba(245,158,11,.12);color:#f59e0b; }
+.status-badge.error      { background:rgba(239,68,68,.12);  color:#ef4444; }
+
+/* Action buttons */
+.action-btn {
+    width:30px;height:30px;border-radius:7px;border:none;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:.8rem;cursor:pointer;transition:all .2s;
+    background:var(--surface);color:var(--text-muted);
+}
+.action-btn.primary:hover { background:rgba(99,102,241,.2);color:var(--accent); }
+.action-btn.warning:hover { background:rgba(245,158,11,.2);color:#f59e0b; }
+.action-btn.danger:hover  { background:rgba(239,68,68,.2);color:#ef4444; }
+
+/* Pagination */
+.page-btn {
+    width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    background:var(--surface);border:1px solid var(--border);color:var(--text-muted);text-decoration:none;
+    transition:all .2s;
+}
+.page-btn:hover { background:var(--accent);border-color:var(--accent);color:#fff; }
+
+/* Table text colors */
+.table { --bs-table-color:var(--text); --bs-table-bg:transparent; --bs-table-hover-bg:var(--surface-hover); color:var(--text) !important; border-color:var(--border); }
+.table thead th { color:var(--text-muted) !important; border-bottom:1px solid var(--border); }
+.table tbody td { color:var(--text) !important; border-bottom:1px solid var(--border); }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const search   = document.getElementById('fileSearch');
+const typeflt  = document.getElementById('typeFilter');
+const rows     = document.querySelectorAll('#uploadsTable tbody tr');
+
+function filterTable() {
+    const q    = (search ? search.value.toLowerCase() : '');
+    const type = (typeflt ? typeflt.value.toUpperCase() : '');
+    rows.forEach(row => {
+        const name    = row.dataset.name.toLowerCase();
+        const rowType = row.dataset.type;
+        const matchQ  = !q    || name.includes(q);
+        const matchT  = !type || rowType === type;
+        row.style.display = (matchQ && matchT) ? '' : 'none';
+    });
+}
+if (search)  search.addEventListener('input', filterTable);
+if (typeflt) typeflt.addEventListener('change', filterTable);
+</script>
 {% endblock %}
